@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: html_document
 ---
 
-
+THERE IS PROBLEM WITH MY OLS ESTIMATES, ALL OTHER METHODS COMPARABLE TO CHRIS
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -56,7 +56,6 @@ b0 <- 1
 b1 <- 2
 
 for(i in 1:100){
-  
   raw <- tibble(x = rnorm(100, 0, 1), 
                 e1 = rnorm(100, 0, 2),
                 e2 = rlnorm(100, 0, 2),

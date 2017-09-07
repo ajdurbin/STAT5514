@@ -2,7 +2,7 @@
 title: 'STAT5514: Homework 2'
 author: "Alexander Durbin"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: pdf_document
+output: html_document
 ---
 
 
@@ -18,6 +18,7 @@ library(tibble)
 library(MASS)
 library(quantreg)
 library(galts)
+library(knitr)
 
 ```
 
@@ -122,10 +123,24 @@ for(i in 1:length(b0_sim)){
 ```
 
 
-```{r eval = TRUE, echo = TRUE}
-b0_sim
+```{r, eval = TRUE, echo = FALSE}
+
+b0_s_m <- colMeans(b0_sim)
+b1_s_m <- colMeans(b1_sim)
+
+b0_bias_sq <- (b0 - b0_s_m)^2
+b1_bias_sq <- (b1 - b1_s_m)^2
+
+b0_var <- sapply(b0_sim, var)
+b1_var <- sapply(b1_sim, var)
+
+b0_mse <- b0_bias_sq + b0_var
+
+b1_mse <- b1_bias_sq + b1_var
 ```
 
-```{r eval = TRUE, echo = TRUE}
-b1_sim
+```{r, eval = TRUE, echo = TRUE}
+knitr::kable(b0_mse)
+
+knitr::kable(b1_mse)
 ```

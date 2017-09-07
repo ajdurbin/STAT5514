@@ -5,6 +5,8 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -15,6 +17,7 @@ library(tidyverse)
 library(tibble)
 library(MASS)
 library(quantreg)
+library(galts)
 
 ```
 
@@ -44,7 +47,7 @@ b1_sim <- tibble(ls1 = rep(0, 100),
                  ld3 = rep(0, 100),
                  lt1 = rep(0, 100),
                  lt2 = rep(0, 100),
-                 lts = rep(0, 100))
+                 lt3 = rep(0, 100))
 
 b0 <- 1
 b1 <- 2
@@ -61,33 +64,58 @@ for(i in 1:length(b0_sim)){
   
   
   
-  ls1 <- lm(y1 ~ x, data = raw)
-  ls2 <- lm(y2 ~ x, data = raw)
-  ls3 <- lm(y3 ~ x, data = raw)
+  l1 <- lm(y1 ~ x, data = raw)
+  l2 <- lm(y2 ~ x, data = raw)
+  l3 <- lm(y3 ~ x, data = raw)
   
-  b0_sim$ls1[i] = coefficients(ls1)[1]
-  b1_sim$ls1[i] = coefficients(ls1)[2]
+  b0_sim$ls1[i] = coefficients(l1)[1]
+  b1_sim$ls1[i] = coefficients(l1)[2]
   
-  b0_sim$ls2[i] = coefficients(ls2)[1]
-  b1_sim$ls2[i] = coefficients(ls2)[2]
+  b0_sim$ls2[i] = coefficients(l2)[1]
+  b1_sim$ls2[i] = coefficients(l2)[2]
   
-  b0_sim$ls3[i] = coefficients(ls3)[1]
-  b1_sim$ls3[i] = coefficients(ls3)[2]
+  b0_sim$ls3[i] = coefficients(l3)[1]
+  b1_sim$ls3[i] = coefficients(l3)[2]
   
-  r1 <- rlm(y1 ~ x, data = raw)
-  r2 <- rlm(y2 ~ x, data = raw)
-  r3 <- rlm(y3 ~ x, data = raw)
+  l1 <- rlm(y1 ~ x, data = raw)
+  l2 <- rlm(y2 ~ x, data = raw)
+  l3 <- rlm(y3 ~ x, data = raw)
   
-  b0_sim$hb1[i] = coefficients(r1)[1]
-  b1_sim$hb1[i] = coefficients(r1)[2]
+  b0_sim$hb1[i] = coefficients(l1)[1]
+  b1_sim$hb1[i] = coefficients(l1)[2]
   
-  b0_sim$hb2[i] = coefficients(r2)[1]
-  b1_sim$hb2[i] = coefficients(r2)[2]
+  b0_sim$hb2[i] = coefficients(l2)[1]
+  b1_sim$hb2[i] = coefficients(l2)[2]
   
-  b0_sim$hb3[i] = coefficients(r3)[1]
-  b1_sim$hb3[i] = coefficients(r3)[2]
+  b0_sim$hb3[i] = coefficients(l3)[1]
+  b1_sim$hb3[i] = coefficients(l3)[2]
+  
+  l1 <- rq(y1 ~ x, data = raw)
+  l2 <- rq(y2 ~ x, data = raw)
+  l3 <- rq(y3 ~ x, data = raw)
+  
+  b0_sim$ld1[i] = coefficients(l1)[1]
+  b1_sim$ld1[i] = coefficients(l1)[2]
+  
+  b0_sim$ld2[i] = coefficients(l2)[1]
+  b1_sim$ld2[i] = coefficients(l2)[2]
+  
+  b0_sim$ld3[i] = coefficients(l3)[1]
+  b1_sim$ld3[i] = coefficients(l3)[2]
 
+  l1 <- ga.lts(raw$y1 ~ raw$x, lower = -100, upper = 100)
+  l2 <- ga.lts(raw$y2 ~ raw$x, lower = -100, upper = 100)
+  l3 <- ga.lts(raw$y3 ~ raw$x, lower = -100, upper = 100)
   
+  b0_sim$lt1[i] = coefficients(l1)[1]
+  b1_sim$lt1[i] = coefficients(l1)[2]
+  
+  b0_sim$lt2[i] = coefficients(l2)[1]
+  b1_sim$lt2[i] = coefficients(l2)[2]
+  
+  b0_sim$lt3[i] = coefficients(l3)[1]
+  b1_sim$lt3[i] = coefficients(l3)[2]
+ 
 }
 
 
@@ -96,4 +124,8 @@ for(i in 1:length(b0_sim)){
 
 ```{r eval = TRUE, echo = TRUE}
 b0_sim
+```
+
+```{r eval = TRUE, echo = TRUE}
+b1_sim
 ```

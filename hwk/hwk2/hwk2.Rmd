@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(tibble)
 library(MASS)
+library(quantreg)
 
 ```
 
@@ -58,12 +59,41 @@ for(i in 1:length(b0_sim)){
                 y2 = b0 + b1 * x + e2,
                 y3 = b0 + b1 * x + e2)
   
+  
+  
+  ls1 <- lm(y1 ~ x, data = raw)
+  ls2 <- lm(y2 ~ x, data = raw)
+  ls3 <- lm(y3 ~ x, data = raw)
+  
+  b0_sim$ls1[i] = coefficients(ls1)[1]
+  b1_sim$ls1[i] = coefficients(ls1)[2]
+  
+  b0_sim$ls2[i] = coefficients(ls2)[1]
+  b1_sim$ls2[i] = coefficients(ls2)[2]
+  
+  b0_sim$ls3[i] = coefficients(ls3)[1]
+  b1_sim$ls3[i] = coefficients(ls3)[2]
+  
+  r1 <- rlm(y1 ~ x, data = raw)
+  r2 <- rlm(y2 ~ x, data = raw)
+  r3 <- rlm(y3 ~ x, data = raw)
+  
+  b0_sim$hb1[i] = coefficients(r1)[1]
+  b1_sim$hb1[i] = coefficients(r1)[2]
+  
+  b0_sim$hb2[i] = coefficients(r2)[1]
+  b1_sim$hb2[i] = coefficients(r2)[2]
+  
+  b0_sim$hb3[i] = coefficients(r3)[1]
+  b1_sim$hb3[i] = coefficients(r3)[2]
+
+  
 }
 
-ls1 <- lm(y1 ~ x, data = raw)
-ls2 <- lm(y2 ~ x, data = raw)
-ls3 <- lm(y3 ~ x, data = raw)
+
+```
 
 
-
+```{r eval = TRUE, echo = TRUE}
+b0_sim
 ```

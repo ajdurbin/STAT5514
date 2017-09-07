@@ -1,0 +1,69 @@
+---
+title: 'STAT5514: Homework 2'
+author: "Alexander Durbin"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+
+library(tidyverse)
+library(tibble)
+library(MASS)
+
+```
+
+```{r, eval = TRUE, echo = FALSE}
+
+b0_sim <- tibble(ls1 = rep(0, 100),
+                 ls2 = rep(0, 100),
+                 ls3 = rep(0, 100),
+                 hb1 = rep(0, 100),
+                 hb2 = rep(0, 100),
+                 hb3 = rep(0, 100),
+                 ld1 = rep(0, 100),
+                 ld2 = rep(0, 100),
+                 ld3 = rep(0, 100),
+                 lt1 = rep(0, 100),
+                 lt2 = rep(0, 100),
+                 lt3 = rep(0, 100))
+
+b1_sim <- tibble(ls1 = rep(0, 100),
+                 ls2 = rep(0, 100),
+                 ls3 = rep(0, 100),
+                 hb1 = rep(0, 100),
+                 hb2 = rep(0, 100),
+                 hb3 = rep(0, 100),
+                 ld1 = rep(0, 100),
+                 ld2 = rep(0, 100),
+                 ld3 = rep(0, 100),
+                 lt1 = rep(0, 100),
+                 lt2 = rep(0, 100),
+                 lts = rep(0, 100))
+
+b0 <- 1
+b1 <- 2
+
+for(i in 1:length(b0_sim)){
+  
+  raw <- tibble(x = rnorm(100, 0, 1), 
+                e1 = rnorm(100, 0, 2),
+                e2 = rlnorm(100, 0, 2),
+                e3 = rcauchy(100, 0 ,2),
+                y1 = b0 + b1 * x + e1,
+                y2 = b0 + b1 * x + e2,
+                y3 = b0 + b1 * x + e2)
+  
+}
+
+ls1 <- lm(y1 ~ x, data = raw)
+ls2 <- lm(y2 ~ x, data = raw)
+ls3 <- lm(y3 ~ x, data = raw)
+
+
+
+```

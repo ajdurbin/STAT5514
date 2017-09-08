@@ -71,7 +71,7 @@ for (i in 1:100){
   raw <- tibble(x = rnorm(100, 0, 1), 
                 e1 = rnorm(100, 0, 2),
                 e2 = rlnorm(100, 0, 2),
-                e3 = rcauchy(100, 0 ,2),
+                e3 = stats::rcauchy(100, 0 ,2),
                 y1 = b0 + b1 * x + e1,
                 y2 = b0 + b1 * x + e2,
                 y3 = b0 + b1 * x + e3)

@@ -158,6 +158,10 @@ knitr::kable(as.data.frame(matrix(b1_mse,nrow = 3), row.names = c('Normal', 'Log
 
 # Normal Error - LSE, RLM
 
+As expected for normally distributed error, lease squares performs best with minimum mean squarred error. Why is best understood using linear models theory. Under normally distributed error and constant variance, we know that least squares estimators are unbiased and have minimum variance amongst all unbiased linear estimators by Gauss-Markov Theorem.
+
+Robust regression performs next best with results very comparable to least squares. Robust regression is most effective when there are several large residuals so that it may appropriately downweight these observations. But for normally distributed error with low variance, there are few outliers. It must be the case that the majority of observations are given full weight so that during the iterative reweighted least squares procedure, we are essentially performing least squares estimation.
+
 # Lognormal Error - LTS, LAD
 
-# Cauchy Error - LAD, RLM
+# Cauchy Error - LAD, RLM/LTS (depends on Cauchy draw)

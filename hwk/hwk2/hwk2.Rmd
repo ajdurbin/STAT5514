@@ -2,14 +2,12 @@
 title: 'STAT5514: Homework 2'
 author: "Alexander Durbin"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: html_document
+output: pdf_document
 ---
-
-DISCLAIMER: Cauchy draws are extremely variable, I had draws resulting in MSE less than 900 for both coefficients, but another draw that had MSE over 20000 for each coefficient.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
-options(stringsAsFactors = FALSE, scipen = 1E10)
+options(stringsAsFactors = FALSE, scipen = 1E8)
 ```
 
 ```{r, include = FALSE}
@@ -20,8 +18,6 @@ library(MASS)
 library(quantreg)
 library(galts)
 library(knitr)
-
-# set.seed(1198724)
 
 ```
 
@@ -130,6 +126,9 @@ for(i in 1:100){
 b0_s_m <- colMeans(b0_sim)
 b1_s_m <- colMeans(b1_sim)
 
+b0_bias <- (b0 - b0_s_m)
+b1_bias <- (b1 - b1_s_m)
+
 b0_bias_sq <- (b0 - b0_s_m)^2
 b1_bias_sq <- (b1 - b1_s_m)^2
 
@@ -141,14 +140,28 @@ b0_mse <- b0_bias_sq + b0_var
 b1_mse <- b1_bias_sq + b1_var
 ```
 
-```{r, eval = TRUE, echo = TRUE}
-# knitr::kable(b0_mse, row.names = c('lse normal', 'lse lognormal', 'lse cauchy', 'rlm normal', 'rlm lognormal', 'rlm cauch', 'lad normal', 'lad lognormal', 'lad cauchy', 'lts normal', 'lts lognormal', 'lts cauchy'))
+```{r, eval = TRUE, echo=FALSE}
 
-# knitr::kable(b1_mse, row.names = c('lse normal', 'lse lognormal', 'lse cauchy', 'rlm normal', 'rlm lognormal', 'rlm cauch', 'lad normal', 'lad lognormal', 'lad cauchy', 'lts normal', 'lts lognormal', 'lts cauchy'))
+knitr::kable(as.data.frame(matrix(b0_var,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'Variance of intercept estimates.')
 
+knitr::kable(as.data.frame(matrix(b1_var,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'Variance of slope estimates.')
 
-knitr::kable(b0_mse)
+knitr::kable(as.data.frame(matrix(b0_bias,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'Bias of intercept estimates.')
 
-knitr::kable(b1_mse)
+knitr::kable(as.data.frame(matrix(b1_bias,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'Bias of slope estimates.')
+
+knitr::kable(as.data.frame(matrix(b0_mse,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'MSE of intercept estimates.')
+
+knitr::kable(as.data.frame(matrix(b1_mse,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'MSE of slope estimates.')
 
 ```
+
+# Normal Error - LSE, RLM
+
+As expected for normally distributed error, lease squares performs best with minimum mean squarred error. Why is best understood using linear models theory. Under normally distributed error and constant variance, we know that least squares estimators are unbiased and have minimum variance amongst all unbiased linear estimators by Gauss-Markov Theorem.
+
+Robust regression performs next best with results very comparable to least squares. Robust regression is most effective when there are several large residuals so that it may appropriately downweight these observations. But for normally distributed error with low variance, there are few outliers. It must be the case that the majority of observations are given full weight so that during the iterative reweighted least squares procedure, we are essentially performing least squares estimation.
+
+# Lognormal Error - LTS, LAD
+
+# Cauchy Error - LAD, RLM/LTS (depends on Cauchy draw)

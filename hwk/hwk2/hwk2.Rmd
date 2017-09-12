@@ -3,6 +3,7 @@ title: 'STAT5514: Homework 2'
 author: "Alexander Durbin"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
+abstract: 'This simulation study compares several regression techniques across three different error distributions. We calculate the mean squared error of the coefficients and choose the two best methods for each error distribution. The two best methods are based on smallest mean squared error.'
 ---
 
 ```{r setup, include=FALSE}
@@ -140,6 +141,9 @@ b0_mse <- b0_bias_sq + b0_var
 b1_mse <- b1_bias_sq + b1_var
 ```
 
+
+# Results
+
 ```{r, eval = TRUE, echo=FALSE}
 
 knitr::kable(as.data.frame(matrix(b0_var,nrow = 3), row.names = c('Normal', 'Lognormal', 'Cauchy')), col.names = c('LSE', 'RLM', 'LAD', 'LTS'), caption = 'Variance of intercept estimates.')
@@ -164,4 +168,10 @@ Robust regression performs next best with results very comparable to least squar
 
 # Lognormal Error - LTS, LAD
 
-# Cauchy Error - LAD, RLM/LTS (depends on Cauchy draw)
+Least trimmed squares and least absolute deviation perform best in the lognormal error term case. Since the lognormal distribution is highly skewed, the median is a more robust estimator of the mean, so LAD should perform well here. Additionally, least trimmed squares has minimal MSE by far since it minimizes a subset of the sum of residuals.
+
+# Cauchy Error - LAD, RLM
+
+This is an ideal case where we would expect robust regression to perform well. Cauchy draws are highly variable and an extreme outlier is likely. Thus, robust regression appropriately downweights multiple outliers to produce estimates with next-smallest means squared error. Note that in some of the simulations, robust regression was either slightly outperformed by least trimmed squares or had comparable results. We attribute these slight differences to the Cauchy draws in our simulations and the useage of genetic functions in `ga.lts`.
+
+Least absolute deviation has superior performance for Cauchy distributed error terms. I would have thought least trimmed squares would have performed better in this case because it would minimize the sum of squared residuals for a subset that did not include the outlier terms. The median is a more robust estimator of the mean when we have data with extreme observations, so this effect must be more relevant here apparent here.

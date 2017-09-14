@@ -1,0 +1,19 @@
+---
+title: "Homework 3"
+subtitle: 'STAT5514: Regression Analysis'
+author: "Alexander Durbin"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Summary
+
+# Impressions
+
+# Criticisms
+
+# Bias Results

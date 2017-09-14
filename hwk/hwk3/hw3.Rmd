@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # Summary
 
+This paper is concerned with the bias that results from transforming non-linear data. The author considers cases where $X, Y$, or both are transformed such that residual assumptions are satisfied for linear regression. The author notes that after fitting a linear model, we can apply the inverse transformation to get confidence intervals and predicition intervals. However, if we are concerned with the mean response of $Y$ given $X$, data transformation can result in large bias of models. This paper suggests solutions for bias induced from common data transformations. The author considers four cases of transformation. Each case includes a bias-adjustment factor that eliminates a large portion of bias for each model. Furthermoer, the resulting bias-adjusted estimates are still slightly biased because the data transformations consist of non-linear functions of parameters. The paper concludes with a short discussion on more advanced techniques for reducing bias and notes that these techniques may not very useful in practice.
+
 # Impressions
 
 # Criticisms

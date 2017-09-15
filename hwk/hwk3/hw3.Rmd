@@ -30,6 +30,6 @@ Overall, I thought this paper discussed a very relevant problem in my statistica
 
 - Similar to above, the author does not state what the bias-adjustment factor is in Equation 4.14. Both terms contain $\sigma^2$ here. Again, if the bias-adjustment factor is simply $\sigma^2$, this point is moot.
 
-- The author does not discuss or mention how these results affect multiple regression.
+- The author does not discuss or mention how these results are affected in multiple regression.
 
 # Bias Results

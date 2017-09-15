@@ -32,4 +32,8 @@ Overall, I thought this paper discussed a very relevant problem in my statistica
 
 - The author does not discuss or mention how these results are affected in multiple regression.
 
+- Equation 2.2 is incorrect, $Y = 1480.3 \times X^{0.5}$ since $e^7.3 = 1480.3 \ne 1500$.
+
+- Typo in paragraph following Equation 4.6, $\hat{ln(Y)}$ should be $ln(\hat{Y})$.
+
 # Bias Results

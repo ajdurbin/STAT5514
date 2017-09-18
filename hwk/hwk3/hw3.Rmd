@@ -16,7 +16,7 @@ This paper is concerned with the bias that results from transforming non-linear 
 
 # Impressions
 
-Overall, I thought this paper discussed a very relevant problem in my statistical education thus far. While theoretically we can focus on estiamtes that are BLUE or UMVUE, in practice data is not that well-behaved. Instead, the author focuses on common transformations and how to reduce their bias. Though discussing very applicable results, I think including a simulation study beyond the logarithm section would be useful. I found this paper accessible, though a little too concise mathematically.
+Overall, I thought this paper discussed a very relevant problem in my statistical education thus far. While theoretically we can focus on estiamtes that are BLUE or UMVUE, in practice data is not that well-behaved. Instead, the author focuses on common transformations and how to reduce their bias. Though discussing very applicable results, I think including a simulation study beyond the logarithm section would be useful. I found this paper accessible, though a little too concise mathematically. 
 
 # Criticisms
 
@@ -32,8 +32,32 @@ Overall, I thought this paper discussed a very relevant problem in my statistica
 
 - The author does not discuss or mention how these results are affected in multiple regression.
 
-- Equation 2.2 is incorrect, $Y = 1480.3 \times X^{0.5}$ since $e^7.3 = 1480.3 \ne 1500$.
+- Equation 2.2 is incorrect, $Y = 1480.3 \times X^{0.5}$ since $e^{7.3} = 1480.3 \ne 1500$.
 
 - Typo in paragraph following Equation 4.6, $\hat{ln(Y)}$ should be $ln(\hat{Y})$.
 
 # Bias Results
+
+## Logarithm
+Assuming the true underlying model is $ln(Y) = \beta_0 + \beta_1X + \epsilon$, we see that $E(Y) = exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2)$ using lognormal properties. Our fitted model is $ln(\hat{Y}) = \hat{\beta}_0 + \hat{\beta}_1X$. $ln(\hat{Y})$ and has mean $\beta_0 + \beta_1X$ and variance $\sigma^2(\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}})$, so that $\hat{Y}$ is also distributed lognormal with mean $E(\hat{Y}) = exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2[\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}])$. Thus we see that the bias is 
+
+\begin{align*}
+E(Y - \hat{Y}) &= exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2) - exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2[\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}]) \\
+&\ne 0.
+\end{align*}
+
+## Postive Fractional Powers
+
+Assuming the true underlying model is $Y^\frac{1}{n} = $\beta_0 + \beta_1X + \epsilon$, we use normal moment generating function properties to see that for $n=2$, $E(Y) = (\beta_0 + \beta_1X)^2 +\sigma^2$. Our fitted model is $\hat{Y}^\frac{1}{n} = \hat{\beta}_0 + \hat{\beta_1}X$, so that similar to above, $E(\hat{Y}) =  (\beta_0 + \beta_1X)^2 +\sigma^2[\frac{1}{n}+\frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}]$. The bias is then 
+
+\begin{align*}
+
+E(Y-\hat{Y}) &=  (\beta_0 + \beta_1X)^2 + \sigma^2 - (\beta_0 + \beta_1X)^2 - \sigma^2[\frac{1}{n}+\frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}] \\
+
+&= \sigma^2[1 - \frac{1}{n} - \frac{\bar{x}^2}{S_{xx}} - \frac{x^2}{S_{xx}}] \\
+& \ne 0.
+
+\end{align*}
+
+## Inverse
+

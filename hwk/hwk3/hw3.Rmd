@@ -39,29 +39,29 @@ Overall, I thought this paper discussed a very relevant problem in my statistica
 # Bias Results
 
 ## Logarithm
-Assuming the true underlying model is $ln(Y) = \beta_0 + \beta_1X + \epsilon$, we see that $E(Y) = exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2)$ using lognormal properties. Our fitted model is $ln(\hat{Y}) = \hat{\beta}_0 + \hat{\beta}_1X$. $ln(\hat{Y})$ and has mean $\beta_0 + \beta_1X$ and variance $\sigma^2(\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}})$, so that $\hat{Y}$ is also distributed lognormal with mean $E(\hat{Y}) = exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2[\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}])$. Thus we see that the bias is 
+Assuming the true underlying model is $ln(Y) = \beta_0 + \beta_1X + \epsilon$, we see that $E(Y) = exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2)$ using lognormal properties. Our fitted model is $ln(\hat{Y}) = \hat{\beta}_0 + \hat{\beta}_1X$. $ln(\hat{Y})$ and has mean $\beta_0 + \beta_1X$ and variance $\sigma^2(\frac{1}{n} + \frac{(x-\bar{x})^2}{S_{xx}})$, so that $\hat{Y}$ is also distributed lognormal with mean $E(\hat{Y}) = exp(\beta_0 + \beta_1X + \frac{1}{2}\sigma^2[\frac{1}{n}+\frac{(x-\bar{x})^2}{S_{xx}}])$. Thus we see that the bias is 
 
 \begin{align*}
-E(Y - \hat{Y}) &= exp \Bigg\{ \beta_0 + \beta_1X + \frac{1}{2}\sigma^2 \Bigg\} - exp \Bigg\{ \beta_0 + \beta_1X + \frac{1}{2}\sigma^2[\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}] \Bigg\} \\
+E(Y - \hat{Y}) &= exp \Bigg\{ \beta_0 + \beta_1X + \frac{1}{2}\sigma^2 \Bigg\} - exp \Bigg\{ \beta_0 + \beta_1X + \frac{1}{2}\sigma^2[\frac{1}{n} + \frac{(x-\bar{x})^2}{S_{xx}}] \Bigg\} \\
 &\ne 0.
 \end{align*}
 
 ## Postive Fractional Powers
 
-Assuming the true underlying model is $Y^\frac{1}{n} = \beta_0 + \beta_1X + \epsilon$, we use normal moment generating function properties to see that for $n=2$, $E(Y) = (\beta_0 + \beta_1X)^2 +\sigma^2$. Our fitted model is $\hat{Y}^\frac{1}{n} = \hat{\beta}_0 + \hat{\beta_1}X$, so that similar to above, $E(\hat{Y}) =  (\beta_0 + \beta_1X)^2 +\sigma^2[\frac{1}{n}+\frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}]$. The bias is then 
+Assuming the true underlying model is $Y^\frac{1}{n} = \beta_0 + \beta_1X + \epsilon$, we use normal moment generating function properties to see that for $n=2$, $E(Y) = (\beta_0 + \beta_1X)^2 +\sigma^2$. Our fitted model is $\hat{Y}^\frac{1}{n} = \hat{\beta}_0 + \hat{\beta_1}X$, so that similar to above, $E(\hat{Y}) =  (\beta_0 + \beta_1X)^2 +\sigma^2[\frac{1}{n}+\frac{(x-\bar{x})^2}{S_{xx}}]$. The bias is then 
 
 \begin{align*}
 
 E(Y-\hat{Y}) &=  (\beta_0 + \beta_1X)^2 + \sigma^2 - (\beta_0 + \beta_1X)^2 - \sigma^2 \Bigg[ \frac{1}{n}+\frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}} \Bigg] \\
 
-&= \sigma^2 \Bigg[ 1 - \frac{1}{n} - \frac{\bar{x}^2}{S_{xx}} - \frac{x^2}{S_{xx}}  \Bigg] \\
+&= \sigma^2 \Bigg[1 - \frac{1}{n} - \frac{(x-\bar{x})^2}{S_{xx}}\Bigg] \\
 & \ne 0.
 
 \end{align*}
 
 ## Inverse
 
-Our true underlying model is $\frac{1}{Y} = \beta_0+\beta_1X+\epsilon$. We then use the identity in the paper to approximate $E(Y) = \frac{1}{\beta_0+\beta_1X} \Big\{ 1 + \frac{\sigma^2}{(\beta_0+\beta_1X)^2} \Big\}$. If we fit $\frac{1}{\hat{Y}} = \hat{\beta}_0+\hat{\beta}_1X$, then using the same identity, we see $E(\hat{Y}) = \frac{1}{\beta_0+\beta_1X} \Big\{ 1 + \frac{\sigma_\beta^2}{(\beta_0+\beta_1X)^2} \Big\}$, where $\sigma_\beta^2 = \sigma^2[\frac{1}{n} + \frac{\bar{x}^2}{S_{xx}} + \frac{x^2}{S_{xx}}]$. It is easy to see that the bias is nonzero also. Indeed
+Our true underlying model is $\frac{1}{Y} = \beta_0+\beta_1X+\epsilon$. We then use the identity in the paper to approximate $E(Y) = \frac{1}{\beta_0+\beta_1X} \Big\{ 1 + \frac{\sigma^2}{(\beta_0+\beta_1X)^2} \Big\}$. If we fit $\frac{1}{\hat{Y}} = \hat{\beta}_0+\hat{\beta}_1X$, then using the same identity, we see $E(\hat{Y}) = \frac{1}{\beta_0+\beta_1X} \Big\{ 1 + \frac{\sigma_\beta^2}{(\beta_0+\beta_1X)^2} \Big\}$, where $\sigma_\beta^2 = \sigma^2[\frac{1}{n}+\frac{(x-\bar{x})^2}{S_{xx}}]$. It is easy to see that the bias is nonzero also. Indeed
 
 \[E(Y - \hat{Y}) = \frac{1}{\beta_0+\beta_1X} \Bigg( \frac{\sigma^2 - \sigma_\beta^2}{(\beta_0+\beta_1X)^2} \Bigg) \ne 0. \]
 

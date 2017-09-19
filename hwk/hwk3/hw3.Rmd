@@ -67,3 +67,12 @@ Our true underlying model is $\frac{1}{Y} = \beta_0+\beta_1X+\epsilon$. We then 
 
 ## Inverse Fractional Powers
 
+Combining the methods of for positive fractional powers and inverse, 
+
+\[ E(Y) = \frac{1}{(\beta_0+\beta_1X)^2 + \sigma^2} \times \Bigg\{1 + \frac{2\sigma^4 + 4(\beta_0+ \beta_1X)^2\sigma^2}{[(\beta_0+\beta_1X)^2+\sigma^2]^2} \Bigg\}.\]
+
+Similarly, 
+
+\[ E(\hat{Y}) = \frac{1}{(\beta_0+\beta_1X)^2 + \sigma_\beta^2} \times \Bigg\{1 + \frac{2\sigma_\beta^4 + 4(\beta_0+ \beta_1X)^2\sigma_\beta^2}{[(\beta_0+\beta_1X)^2+\sigma_\beta^2]^2} \Bigg\}.\]
+
+Where $\sigma_\beta^2 = \sigma^2[\frac{1}{n}+\frac{(x-\bar{x})^2}{S_{xx}}]$. It is then easy to see that $E(Y-\hat{Y}) \ne 0$.

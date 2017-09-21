@@ -44,7 +44,7 @@ x <- raw$Field
 f1 <- lm(y ~ x)
 bo <- coefficients(f1)
 r2 <- residuals(f1)^2
-f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 100)
+f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 1000)
 w = rep(0, nrow(raw))
 w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
 y <- sqrt(w) * y
@@ -54,13 +54,13 @@ bn <- coefficients(lm(y ~ x))
 while(all(abs(bn - bo) > 1E-5)){
   
   f1 <- lm(y ~ x)
-  bo <- coefficients(f1)
   r2 <- residuals(f1)^2
-  f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 100)
+  f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 1000)
   w = rep(0, nrow(raw))
   w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
   y <- sqrt(w) * y
   x <- sqrt(w) * x
+  bo <- coefficients(f1)
   bn <- coefficients(lm(y ~ x))
   
 }

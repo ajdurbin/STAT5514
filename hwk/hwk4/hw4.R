@@ -41,14 +41,11 @@
 
 library(tidyverse)
 library(MASS)
+library(broom)
 
 raw <- read.table('data.txt', header = TRUE)
 y <- raw$Lab
 x <- raw$Field
-
-ggplot(data = raw) +
-  geom_jitter(mapping = aes(x = Field, y = Lab)) +
-  geom_smooth(mapping = aes(x = Field, y = Lab), method = 'lm', se = FALSE)
 
 f1 <- lm(y ~ x)
 bo <- coefficients(f1)
@@ -83,3 +80,11 @@ ggplot(data = raw) +
   geom_smooth(mapping = aes(x = Field, y = Lab, color = 'rlm'), method = 'rlm', se = FALSE, fullrange = TRUE) +
   geom_abline(mapping = aes(color = 'dual', slope = bn[2], intercept = bn[1])) +
   scale_color_manual(values = c('red', 'blue', 'orange'))
+
+mod <- lm(Lab ~ Field, data = raw)
+df <- augment(mod)
+ggplot(data = df) + 
+  geom_jitter(mapping = aes(x = .fitted, y = .resid))
+
+ggplot(data = raw) +
+  stat_qq(mapping = aes(sample = Lab))

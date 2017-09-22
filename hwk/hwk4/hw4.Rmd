@@ -51,6 +51,7 @@ while(all(abs(bn - bo) > 1E-5)){
 ```
 
 ```{r}
+
 cat("The simple linear regression coefficients are:\nIntercept: ", coefficients(lm(Lab ~ Field, data = raw))[1],"\nSlope: ", coefficients(lm(Lab ~ Field, data = raw))[2])
 
 cat("The robust linear regression coefficients are:\nIntercept: ", coefficients(rlm(Lab ~ Field, data = raw))[1],"\nSlope: ", coefficients(rlm(Lab ~ Field, data = raw))[2])

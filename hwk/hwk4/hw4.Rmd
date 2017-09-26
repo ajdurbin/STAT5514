@@ -3,7 +3,8 @@ title: "Homework 4"
 subtitle: "STAT5514: Regression Analysis"
 author: "Alexander Durbin"
 date: "`r Sys.Date()`"
-output: html_document
+output: pdf_document
+size: 12pt
 ---
 
 ```{r setup, include=FALSE}
@@ -13,8 +14,8 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE)
 ```{r, include = FALSE}
 
 library(tidyverse)
-library(MASS)
 library(broom)
+library(lmtest)
 
 ```
 
@@ -22,29 +23,22 @@ library(broom)
 
 raw <- read.table('data.txt', header = TRUE)
 y <- raw$Lab
-x <- raw$Field
+x <- cbind(rep(1, nrow(raw)), raw$Field)
 
-f1 <- lm(y ~ x)
-bo <- coefficients(f1)
-r2 <- residuals(f1)^2
-f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 1000)
-w = rep(0, nrow(raw))
-w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
-y <- sqrt(w) * y
-x <- sqrt(w) * x
-bn <- coefficients(lm(y ~ x))
+tol <- 1E-5
 
-while(all(abs(bn - bo) > 1E-5)){
+beta <- coefficients(lm(y ~ raw$Field))
+
+dif <- 1
+
+while (dif > tol) {
   
-  f1 <- lm(y ~ x)
-  r2 <- residuals(f1)^2
-  f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 1000)
-  w = rep(0, nrow(raw))
-  w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
-  y <- sqrt(w) * y
-  x <- sqrt(w) * x
-  bo <- coefficients(f1)
-  bn <- coefficients(lm(y ~ x))
+  old <- beta
+  r <- y - x %*% old
+  theta <- coefficients(glm(r^2 ~ raw$Field, family = Gamma(link = 'log')))
+  W = diag(as.vector(1 / exp( x %*% theta)))
+  beta <- solve(t(x) %*% W %*% x) %*% t(x) %*% W %*% y
+  dif <- sum((old - beta)^2)
   
 }
 
@@ -54,9 +48,17 @@ while(all(abs(bn - bo) > 1E-5)){
 
 cat("The simple linear regression coefficients are:\nIntercept: ", coefficients(lm(Lab ~ Field, data = raw))[1],"\nSlope: ", coefficients(lm(Lab ~ Field, data = raw))[2])
 
-cat("The robust linear regression coefficients are:\nIntercept: ", coefficients(rlm(Lab ~ Field, data = raw))[1],"\nSlope: ", coefficients(rlm(Lab ~ Field, data = raw))[2])
+cat("The dual regression coefficients are:\nIntercept: ", beta[1],"\nSlope: ", beta[2])
 
-cat("The dual regression coefficients are:\nIntercept: ", bn[1],"\nSlope: ", bn[2])
+```
+
+We see that the slope coefficients are not significantly different, but there is a difference in the intercept coefficients. The Bruece-Pagan test identifies non-constant variance in this data, as do the residual plots. Additionally, the data is non-normal as well. Dual regression may not be an appropriate choice here, however. There is little change in the fitted models.
+
+
+```{r, echo = TRUE}
+
+bptest(lm(raw$Lab ~ raw$Field))
+shapiro.test(raw$Lab)
 
 ```
 
@@ -66,7 +68,23 @@ mod <- lm(Lab ~ Field, data = raw)
 df <- augment(mod)
 ggplot(data = df) + 
   geom_jitter(mapping = aes(x = .fitted, y = .resid)) +
-  ggtitle("Residuals Versus Fitted")
+  ggtitle("Residuals Versus Fitted") +
+  xlab("Fitted") +
+  ylab("Residuals") +
+  geom_abline(intercept = 0, slope = 0)
+
+```
+
+```{r}
+
+mod <- lm(Lab ~ Field, data = raw)
+df <- augment(mod)
+ggplot(data = df) + 
+  geom_jitter(mapping = aes(x = .fitted, y = abs(.resid))) +
+  ggtitle("|Residuals| Versus Fitted") +
+  xlab("Fitted") +
+  ylab("|Residuals|") +
+  geom_abline(intercept = 0, slope = 0)
 
 ```
 
@@ -74,16 +92,19 @@ ggplot(data = df) +
 
 ggplot(data = raw) +
   stat_qq(mapping = aes(sample = Lab)) +
-  ggtitle("Normal QQ Plot")
+  ggtitle("Normal QQ Plot") +
+  xlab("Theoretical Quantiles") +
+  ylab("Sample Quantiles")
 
 ```
 
 ```{r}
+
 ggplot(data = raw) +
   geom_jitter(mapping = aes(x = Field, y = Lab)) +
-  geom_smooth(mapping = aes(x = Field, y = Lab, color = 'lm'), method = 'lm', se = FALSE, fullrange = TRUE) +
-  geom_smooth(mapping = aes(x = Field, y = Lab, color = 'rlm'), method = 'rlm', se = FALSE, fullrange = TRUE) +
-  geom_abline(mapping = aes(color = 'dual', slope = bn[2], intercept = bn[1])) +
-  scale_color_manual(values = c('red', 'blue', 'orange')) +
+  geom_smooth(mapping = aes(x = Field, y = Lab, linetype = 'lm'), method = 'lm', se = FALSE, fullrange = TRUE) +
+  geom_abline(mapping = aes(linetype = 'dual`', slope = beta[2], intercept = beta[1])) +
+  scale_linetype_manual(values = c('solid', 'dashed')) +
   ggtitle("Regression Fits")
+
 ```

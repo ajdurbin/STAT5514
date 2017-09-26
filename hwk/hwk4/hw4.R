@@ -39,46 +39,91 @@
 
 # new start ---------------------------------------------------------------
 
+# library(tidyverse)
+# library(MASS)
+# library(broom)
+# 
+# raw <- read.table('data.txt', header = TRUE)
+# y <- raw$Lab
+# x <- raw$Field
+# x_fixed <- raw$Field
+# 
+# f1 <- lm(y ~ x)
+# bo <- coefficients(f1)
+# r2 <- residuals(f1)^2
+# f2 <- glm(r2 ~ x_fixed, family = Gamma(link = 'log'), maxit = 1000)
+# w = rep(0, nrow(raw))
+# w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
+# y <- sqrt(w) * y
+# x <- sqrt(w) * x
+# bn <- coefficients(lm(y ~ x))
+# 
+# while(all(abs(bn - bo) > 1E-5)){
+#   
+#   f1 <- lm(y ~ x)
+#   r2 <- residuals(f1)^2
+#   f2 <- glm(r2 ~ x_fixed, family = Gamma(link = 'log'), maxit = 1000)
+#   w = rep(0, nrow(raw))
+#   w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
+#   y <- sqrt(w) * y
+#   x <- sqrt(w) * x
+#   bo <- coefficients(f1)
+#   bn <- coefficients(lm(y ~ x))
+#   
+# }
+# 
+# bo
+# bn
+
+# ggplot(data = raw) +
+#   geom_jitter(mapping = aes(x = Field, y = Lab)) +
+#   geom_smooth(mapping = aes(x = Field, y = Lab, color = 'lm'), method = 'lm', se = FALSE, fullrange = TRUE) +
+#   geom_smooth(mapping = aes(x = Field, y = Lab, color = 'rlm'), method = 'rlm', se = FALSE, fullrange = TRUE) +
+#   geom_abline(mapping = aes(color = 'dual', slope = bn[2], intercept = bn[1])) +
+#   scale_color_manual(values = c('red', 'blue', 'orange'))
+# 
+# mod <- lm(Lab ~ Field, data = raw)
+# df <- augment(mod)
+# ggplot(data = df) + 
+#   geom_jitter(mapping = aes(x = .fitted, y = .resid))
+# 
+# ggplot(data = raw) +
+#   stat_qq(mapping = aes(sample = Lab))
+
+
+# try first algorithm -----------------------------------------------------
+
+
 library(tidyverse)
 library(MASS)
 library(broom)
 
 raw <- read.table('data.txt', header = TRUE)
 y <- raw$Lab
-x <- raw$Field
+x <- cbind(rep(1, nrow(raw)), raw$Field)
 
-f1 <- lm(y ~ x)
-bo <- coefficients(f1)
-r2 <- residuals(f1)^2
-f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 1000)
-w = rep(0, nrow(raw))
-w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
-y <- sqrt(w) * y
-x <- sqrt(w) * x
-bn <- coefficients(lm(y ~ x))
+tol <- 1E-5
 
-while(all(abs(bn - bo) > 1E-5)){
+beta <- coefficients(lm(y ~ raw$Field))
+
+dif <- 1
+
+while (dif > tol) {
   
-  f1 <- lm(y ~ x)
-  r2 <- residuals(f1)^2
-  f2 <- glm(r2 ~ x, family = Gamma(link = 'log'), maxit = 1000)
-  w = rep(0, nrow(raw))
-  w <- sapply(x, function(g) return(1 / exp(coefficients(f1)[1] + coefficients(f1)[2] * g)))
-  y <- sqrt(w) * y
-  x <- sqrt(w) * x
-  bo <- coefficients(f1)
-  bn <- coefficients(lm(y ~ x))
+  old <- beta
+  r <- y - x %*% old
+  theta <- coefficients(glm(r^2 ~ raw$Field, family = Gamma(link = 'log')))
+  W = diag(as.vector(1 / exp( x %*% theta)))
+  beta <- solve(t(x) %*% W %*% x) %*% t(x) %*% W %*% y
+  dif <- sum((old - beta)^2)
   
 }
-
-bo
-bn
 
 ggplot(data = raw) +
   geom_jitter(mapping = aes(x = Field, y = Lab)) +
   geom_smooth(mapping = aes(x = Field, y = Lab, color = 'lm'), method = 'lm', se = FALSE, fullrange = TRUE) +
   geom_smooth(mapping = aes(x = Field, y = Lab, color = 'rlm'), method = 'rlm', se = FALSE, fullrange = TRUE) +
-  geom_abline(mapping = aes(color = 'dual', slope = bn[2], intercept = bn[1])) +
+  geom_abline(mapping = aes(color = 'dual', slope = beta[2], intercept = beta[1])) +
   scale_color_manual(values = c('red', 'blue', 'orange'))
 
 mod <- lm(Lab ~ Field, data = raw)

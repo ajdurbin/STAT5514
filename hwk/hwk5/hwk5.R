@@ -43,9 +43,9 @@ travel <- 1
 iter <- 1
 tol <- 1e-5
 maxiter <- 1000
-new <- coefficients(lm(y ~ x + I(x^2), data = d1))
+new <- sample(1:100, 3)
 
-while(travel > tol & iter < maxiter){
+while(travel > tol && iter < maxiter){
   
   old <- new
   r <- d1$y - ass_fun(d1$x, old)

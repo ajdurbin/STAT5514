@@ -35,6 +35,7 @@ beta_fun <- function(data, old){
 
 gamma_fun <- function(data, old){
   val <- (old[1] * old[2] * data * log(data)) / (1 + old[2] * data^old[3])^2
+  return(val)
 }
 
 
@@ -43,7 +44,7 @@ travel <- 1
 iter <- 1
 tol <- 1e-5
 maxiter <- 1000
-new <- sample(1:100, 3)
+new <- c(0.01, 0.05, 0.1)
 
 while(travel > tol && iter < maxiter){
   

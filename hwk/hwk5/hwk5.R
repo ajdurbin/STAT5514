@@ -27,10 +27,10 @@ raw <- read.csv("Herbicide.csv")
 colnames(raw) <- NULL
 raw <- raw[2:nrow(raw), ]
 raw <- raw[, 2:ncol(raw)]
-obs1 <- raw[, 1:2]
-obs2 <- raw[, 3:4]
-x <- as.numeric(obs1[, 1])
-y <- as.numeric(obs1[, 2])
+# obs <- raw[, 1:2]
+obs <- raw[, 3:4]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
 
 
 # function declarations ---------------------------------------------------
@@ -90,8 +90,10 @@ while(travel > tol && iter < maxiter){
 
 
 nlfit <- nls(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
-             start = c(p1 = 97, p2 = 0.1, p3 = -2.2))
+             start = c(p1 = 100, p2 = 1, p3 = -1))
 
+plot(x,y)
+lines(x, predict(nlfit), lty = 2, col = "red", lwd = 3)
 
 
 

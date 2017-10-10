@@ -2,6 +2,11 @@
 # STAT5514 Homework 5
 
 rm(list = ls())
+options(stringsAsFactors = FALSE)
+
+
+# data formatting ---------------------------------------------------------
+
 
 # formatting
 # raw <- readxl::read_excel("Herbicide.xls")
@@ -17,10 +22,19 @@ rm(list = ls())
 # d1$x <- as.numeric(d1$x)
 # d2$x <- as.numeric(d2$x)
 
+# filtering and formatting of data after exporting the xlsx to csv
 raw <- read.csv("Herbicide.csv")
-obs1 <- raw[1:7, ]
-x <- obs1$X
-y <- obs1$Y
+colnames(raw) <- NULL
+raw <- raw[2:nrow(raw), ]
+raw <- raw[, 2:ncol(raw)]
+obs1 <- raw[, 1:2]
+obs2 <- raw[, 3:4]
+x <- as.numeric(obs1[, 1])
+y <- as.numeric(obs1[, 2])
+
+
+# function declarations ---------------------------------------------------
+
 
 # functions for D matrix and residuals
 ass_fun <- function(data, old){
@@ -42,6 +56,9 @@ gamma_fun <- function(data, old){
   val <- (old[1] * old[2] * data^old[3] * log(data)) / (1 + old[2] * data^old[3])^2
   return(val)
 }
+
+
+# gauss-newton algorithm --------------------------------------------------
 
 
 # algorithm
@@ -67,5 +84,14 @@ while(travel > tol && iter < maxiter){
   
 }
 
-# nlslm to get initial values
-# just remove x from the model
+
+
+# using nls ---------------------------------------------------------------
+
+
+nlfit <- nls(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+             start = c(p1 = 97, p2 = 0.1, p3 = -2.2))
+
+
+
+

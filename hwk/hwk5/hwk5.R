@@ -3,6 +3,7 @@
 
 rm(list = ls())
 options(stringsAsFactors = FALSE)
+library(minpack.lm)
 
 
 # data formatting ---------------------------------------------------------
@@ -95,5 +96,8 @@ nlfit <- nls(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3),
 plot(x,y)
 lines(x, predict(nlfit), lty = 2, col = "red", lwd = 3)
 
+nlslmfit <- nlsLM(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+                  start = c(p1 = 10, p2 = 0, p3 = -1))
 
-
+plot(x,y)
+lines(x, predict(nlslmfit), lty = 2, col = "red", lwd = 3)

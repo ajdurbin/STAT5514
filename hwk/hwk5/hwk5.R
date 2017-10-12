@@ -89,6 +89,18 @@ while(travel > tol && iter < maxiter){
 
 # using nls ---------------------------------------------------------------
 
+rm(list = ls())
+options(stringsAsFactors = FALSE)
+library(minpack.lm)
+
+raw <- read.csv("Herbicide.csv")
+colnames(raw) <- NULL
+raw <- raw[2:nrow(raw), ]
+raw <- raw[, 2:ncol(raw)]
+# obs <- raw[, 1:2]
+obs <- raw[, 3:4]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
 
 nlfit <- nls(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
              start = c(p1 = 100, p2 = 1, p3 = -1))
@@ -101,3 +113,24 @@ nlslmfit <- nlsLM(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3),
 
 plot(x,y)
 lines(x, predict(nlslmfit), lty = 2, col = "red", lwd = 3)
+
+
+
+
+# bootstrapping ci --------------------------------------------------------
+
+b_coef <- matrix(data = NA, ncol = 3, nrow = 1000)
+
+for(i in 1:1000){
+  
+  boot <- sample(1:7, 7, replace = TRUE)
+  x_star <- x[boot]
+  y_star <- y[boot]
+  
+  nlfit <- nls(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
+               start = c(p1 = 100, p2 = 1, p3 = -1))
+  
+  
+b_coef[i, ] <- coefficients(nlfit)
+  
+}

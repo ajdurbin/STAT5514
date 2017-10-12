@@ -119,7 +119,25 @@ lines(x, predict(nlslmfit), lty = 2, col = "red", lwd = 3)
 
 # bootstrapping ci --------------------------------------------------------
 
+
+rm(list = ls())
+options(stringsAsFactors = FALSE)
+library(minpack.lm)
+library(nls2)
+library(mgcv)
+
+raw <- read.csv("Herbicide.csv")
+colnames(raw) <- NULL
+raw <- raw[2:nrow(raw), ]
+raw <- raw[, 2:ncol(raw)]
+# obs <- raw[, 1:2]
+obs <- raw[, 3:4]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
+
+
 b_coef <- matrix(data = NA, ncol = 3, nrow = 1000)
+ss_res <- rep(0, 1000)
 
 for(i in 1:1000){
   
@@ -127,10 +145,62 @@ for(i in 1:1000){
   x_star <- x[boot]
   y_star <- y[boot]
   
-  nlfit <- nls(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
-               start = c(p1 = 100, p2 = 1, p3 = -1))
+  try({
+    
+    nlfit <- nls2(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
+                start = c(p1 = 100, p2 = 1, p3 = -1),
+                control = nls.control(maxiter = 1e3,
+                                     minFactor = .Machine$double.eps,
+                                     tol = 1e-5),
+                algorithm = "default")
+  }, silent = TRUE)
   
+  if(class(nlfit) == 'try-error'){
+    b_coef[i, ] <- NA
+  } else {
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+  }
   
-b_coef[i, ] <- coefficients(nlfit)
-  
+
 }
+
+dim(uniquecombs(b_coef))
+length(unique(ss_res))
+summary(ss_res)
+
+# compare best estimate from all 7 data points to mean of bootstrapped sample
+best <- nls2(y ~ (p1 * p2 * x^p3) / (1 + p2 * x_star^p3), 
+              start = c(p1 = 100, p2 = 1, p3 = -1),
+              control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+              algorithm = "default")
+coefficients(best)
+c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
+
+# nlstools ----------------------------------------------------------------
+
+
+rm(list = ls())
+options(stringsAsFactors = FALSE)
+library(minpack.lm)
+library(nlstools)
+
+
+raw <- read.csv("Herbicide.csv")
+colnames(raw) <- NULL
+raw <- raw[2:nrow(raw), ]
+raw <- raw[, 2:ncol(raw)]
+# obs <- raw[, 1:2]
+obs <- raw[, 3:4]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
+
+fit <- nls(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+           start = c(p1 = 100, p2 = 1, p3 = -1),
+           control = nls.control(maxiter = 1e5,
+                                 minFactor = .Machine$double.eps,
+                                 tol = 1e-1))
+
+boot <- nlsBoot(fit, niter = 1000)

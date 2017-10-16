@@ -219,6 +219,7 @@ quantile(b_coef[, 3], probs = c(0.025, 0.975))
 
 # problem 1 ---------------------------------------------------------------
 
+set.seed(12345)
 
 rm(list = ls())
 options(stringsAsFactors = FALSE)

@@ -136,10 +136,10 @@ x <- as.numeric(obs[, 1])
 y <- as.numeric(obs[, 2])
 
 
-b_coef <- matrix(data = NA, ncol = 3, nrow = 10000)
-ss_res <- rep(0, 10000)
+b_coef <- matrix(data = NA, ncol = 3, nrow = 9000)
+ss_res <- rep(0, 9000)
 
-for(i in 1:10000){
+for(i in 1:9000){
   
   boot <- sample(1:7, 7, replace = TRUE)
   x_star <- x[boot]
@@ -233,10 +233,10 @@ obs <- raw[, 1:2]
 colnames(obs) <- c('y', 'x')
 
 
-b_coef <- matrix(data = NA, ncol = 3, nrow = 10000)
-ss_res <- rep(0, 10000)
+b_coef <- matrix(data = NA, ncol = 3, nrow = 9000)
+ss_res <- rep(0, 9000)
 
-for(i in 1:10000){
+for(i in 1:9000){
   
   boot <- sample(1:7, 7, replace = TRUE)
   boot_sample <- obs[boot, ]

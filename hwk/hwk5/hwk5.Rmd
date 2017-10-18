@@ -28,8 +28,9 @@ raw <- read.csv("Herbicide.csv")
 colnames(raw) <- NULL
 raw <- raw[2:nrow(raw), ]
 raw <- raw[, 2:ncol(raw)]
+
+# choose obs
 obs <- raw[, 1:2]
-# obs <- raw[, 3:4]
 x <- as.numeric(obs[, 1])
 y <- as.numeric(obs[, 2])
 
@@ -92,12 +93,7 @@ quantile(b_coef[, 3], probs = c(0.025, 0.975))
 ```{r}
 
 # load data
-raw <- read.csv("Herbicide.csv")
-colnames(raw) <- NULL
-raw <- raw[2:nrow(raw), ]
-raw <- raw[, 2:ncol(raw)]
-obs <- raw[, 1:2]
-# obs <- raw[, 3:4]
+obs <- raw[, 3:4]
 x <- as.numeric(obs[, 1])
 y <- as.numeric(obs[, 2])
 

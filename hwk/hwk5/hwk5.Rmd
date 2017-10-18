@@ -18,7 +18,9 @@ library(mgcv)
 library(robustbase)
 ```
 
-# Problem 1
+For each of the following datasets we use the bootstrap to derive confidence intervals. To combat possible singularity errors, we include `try` statements when fitting the models and increase our bootstrap replications. 
+
+# Herbicide
 ## First Observation
 
 ```{r}
@@ -35,11 +37,11 @@ x <- as.numeric(obs[, 1])
 y <- as.numeric(obs[, 2])
 
 # storage
-b_coef <- matrix(data = NA, ncol = 3, nrow = 9000)
-ss_res <- rep(0, 9000)
+b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+ss_res <- rep(0, 2000)
 
 # call
-for(i in 1:9000){
+for(i in 1:2000){
   
   boot <- sample(1:7, 7, replace = TRUE)
   x_star <- x[boot]
@@ -79,7 +81,10 @@ c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
 
 # plot
 plot(x, y)
-lines(x, predict(best), lty = 2, col = "red", lwd = 3)
+pts <- seq(min(x), max(x), by = 0.01)
+preds <- predict(best, pts)
+lines(x, preds, lty = 1, col = "red", lwd = 3)
+
 
 # ci
 quantile(b_coef[, 1], probs = c(0.025, 0.975))
@@ -87,6 +92,8 @@ quantile(b_coef[, 2], probs = c(0.025, 0.975))
 quantile(b_coef[, 3], probs = c(0.025, 0.975))
 
 ```
+
+None of our confidence intervals contain 0, so we can claim that they are significantly different from 0. 
 
 ## Second Observation
 
@@ -98,11 +105,11 @@ x <- as.numeric(obs[, 1])
 y <- as.numeric(obs[, 2])
 
 # storage
-b_coef <- matrix(data = NA, ncol = 3, nrow = 9000)
-ss_res <- rep(0, 9000)
+b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+ss_res <- rep(0, 2000)
 
 # call
-for(i in 1:9000){
+for(i in 1:2000){
   
   boot <- sample(1:7, 7, replace = TRUE)
   x_star <- x[boot]
@@ -142,7 +149,10 @@ c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
 
 # plot
 plot(x, y)
-lines(x, predict(best), lty = 2, col = "red", lwd = 3)
+pts <- seq(min(x), max(x), by = 0.01)
+preds <- predict(best, pts)
+lines(x, preds, lty = 1, col = "red", lwd = 3)
+
 
 # ci
 quantile(b_coef[, 1], probs = c(0.025, 0.975))
@@ -151,10 +161,12 @@ quantile(b_coef[, 3], probs = c(0.025, 0.975))
 
 ```
 
-# Problem 2
+Similar to above, none of our confidence intervals contain 0, so we can claim that each of the coefficients is significantly different from 0.
 
-```{r}
+# Efficiency
 
+```{r, warning=FALSE}
+ 
 # load data
 raw <- read.csv("EffRange.csv")
 raw <- raw[, 2:ncol(raw)]
@@ -162,28 +174,28 @@ obs <- raw[, 1:2]
 colnames(obs) <- c('y', 'x')
 
 # storage
-b_coef <- matrix(data = NA, ncol = 3, nrow = 9000)
-ss_res <- rep(0, 9000)
+b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+ss_res <- rep(0, 2000)
 
 # bootstrap
-for(i in 1:9000){
-  
+for(i in 1:2000){
+
   boot <- sample(1:7, 7, replace = TRUE)
   boot_sample <- obs[boot, ]
-  
+
   try({
-    
-    nlfit <- nlrob(formula = y ~ a / (1 + b * exp(-k * x)), 
+
+    nlfit <- nlrob(formula = y ~ a / (1 + b * exp(-k * x)),
                   start = list(a = 40, b = 400, k = 0.1),
                   data = boot_sample,
                   control = nls.control(maxiter = 1e3,
                                     minFactor = .Machine$double.eps,
                                     tol = 1e-5))
   }, silent = TRUE)
-  
+
   b_coef[i, ] <- coefficients(nlfit)
   ss_res[i] <- sum(residuals(nlfit)^2)
-  
+
 }
 
 # grab unique
@@ -194,15 +206,20 @@ summary(ss_res)
 
 # compare best estimate from all 7 data points to mean of bootstrapped sample
 best <- nlrob(formula = y ~ a / (1 + b * exp(-k * x)),
-             start = list(a = 40, b = 400, k = 0.1),
-             data = obs)
+             start = list(a = 40, b = 40, k = 0.1),
+             data = obs,
+             control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5))
 
 coefficients(best)
 c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
 
 # plots
 plot(obs$x, obs$y)
-lines(obs$x, predict(best), lty = 2, col = "red", lwd = 3)
+pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+preds <- predict(best, pts)
+lines(obs$x, preds, lty = 1, col = "red", lwd = 3)
 
 # ci
 quantile(b_coef[, 1], probs = c(0.025, 0.975))

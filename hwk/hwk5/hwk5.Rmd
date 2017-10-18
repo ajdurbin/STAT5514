@@ -241,7 +241,6 @@ my_func <- function(boot_co, dat){
 }
 
 # plots
-plot(obs$x, obs$y)
 pts <- seq(min(obs$x), max(obs$x), by = 0.01)
 preds <- my_func(boot_co = b_coef, dat = pts)
 plot(obs$x, obs$y, xlab = "x", ylab = "y", main = "Population Growth Model")

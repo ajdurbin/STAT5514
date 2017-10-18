@@ -155,13 +155,15 @@ for(i in 1:9000){
                 algorithm = "default")
   }, silent = TRUE)
   
-  if(class(nlfit) == 'try-error'){
-    b_coef[i, ] <- NA
-  } else {
-    b_coef[i, ] <- coefficients(nlfit)
-    ss_res[i] <- sum(residuals(nlfit)^2)
-  }
+  # if(class(nlfit) == 'try-error'){
+  #   b_coef[i, ] <- NA
+  # } else {
+  #   b_coef[i, ] <- coefficients(nlfit)
+  #   ss_res[i] <- sum(residuals(nlfit)^2)
+  # }
   
+  b_coef[i, ] <- coefficients(nlfit)
+  ss_res[i] <- sum(residuals(nlfit)^2)
 
 }
 

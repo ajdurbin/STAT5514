@@ -55,15 +55,19 @@ for(i in 1:2000){
                                      minFactor = .Machine$double.eps,
                                      tol = 1e-5),
                 algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
   }, silent = TRUE)
   
-  b_coef[i, ] <- coefficients(nlfit)
-  ss_res[i] <- sum(residuals(nlfit)^2)
+  # b_coef[i, ] <- coefficients(nlfit)
+  # ss_res[i] <- sum(residuals(nlfit)^2)
 
 }
 
 # grab unique
-b_coef <- unique(b_coef)
+b_coef <- unique(na.omit(b_coef))
 ss_res <- unique(ss_res)
 
 summary(ss_res)
@@ -80,7 +84,7 @@ coefficients(best)
 c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
 
 # plot
-plot(x, y)
+plot(x, y, main = "Nonlinear fit")
 pts <- seq(min(x), max(x), by = 0.01)
 preds <- predict(best, pts)
 lines(x, preds, lty = 1, col = "red", lwd = 3)
@@ -123,15 +127,19 @@ for(i in 1:2000){
                                      minFactor = .Machine$double.eps,
                                      tol = 1e-5),
                 algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
   }, silent = TRUE)
   
-  b_coef[i, ] <- coefficients(nlfit)
-  ss_res[i] <- sum(residuals(nlfit)^2)
+  # b_coef[i, ] <- coefficients(nlfit)
+  # ss_res[i] <- sum(residuals(nlfit)^2)
 
 }
 
 # grab unique
-b_coef <- unique(b_coef)
+b_coef <- unique(na.omit(b_coef))
 ss_res <- unique(ss_res)
 
 summary(ss_res)
@@ -148,7 +156,7 @@ coefficients(best)
 c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
 
 # plot
-plot(x, y)
+plot(x, y, main = "Nonlinear fit")
 pts <- seq(min(x), max(x), by = 0.01)
 preds <- predict(best, pts)
 lines(x, preds, lty = 1, col = "red", lwd = 3)
@@ -185,41 +193,59 @@ for(i in 1:2000){
 
   try({
 
-    nlfit <- nlrob(formula = y ~ a / (1 + b * exp(-k * x)),
-                  start = list(a = 40, b = 400, k = 0.1),
+    nlfit <- nls2(formula = y ~ a / (1 + exp(b + k * x)),
+                  start = list(a = 100, b = 2.5, k = -0.1),
                   data = boot_sample,
                   control = nls.control(maxiter = 1e3,
                                     minFactor = .Machine$double.eps,
-                                    tol = 1e-5))
+                                    tol = 1e-5),
+                  algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
   }, silent = TRUE)
 
-  b_coef[i, ] <- coefficients(nlfit)
-  ss_res[i] <- sum(residuals(nlfit)^2)
+  # b_coef[i, ] <- coefficients(nlfit)
+  # ss_res[i] <- sum(residuals(nlfit)^2)
 
 }
 
 # grab unique
-b_coef <- unique(b_coef)
+b_coef <- unique(na.omit(b_coef))
 ss_res <- unique(ss_res)
 
 summary(ss_res)
 
 # compare best estimate from all 7 data points to mean of bootstrapped sample
-best <- nlrob(formula = y ~ a / (1 + b * exp(-k * x)),
-             start = list(a = 40, b = 40, k = 0.1),
+best <- nls2(formula = y ~ a / (1 + exp(b + k * x)),
+             start = list(a = 100, b = 2.5, k = -0.1),
              data = obs,
              control = nls.control(maxiter = 1e3,
                                     minFactor = .Machine$double.eps,
-                                    tol = 1e-5))
+                                    tol = 1e-5),
+             algorithm = "default")
 
 coefficients(best)
 c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
 
+# function for predictions
+my_func <- function(boot_co, dat){
+  
+  a <- mean(boot_co[, 1])
+  b <- mean(boot_co[, 2])
+  c <- mean(boot_co[, 3])
+  pckg <- a / (1 + exp(b + c*dat))
+  return(pckg)
+  
+}
+
 # plots
 plot(obs$x, obs$y)
 pts <- seq(min(obs$x), max(obs$x), by = 0.01)
-preds <- predict(best, pts)
-lines(obs$x, preds, lty = 1, col = "red", lwd = 3)
+preds <- my_func(boot_co = b_coef, dat = pts)
+plot(obs$x, obs$y, xlab = "x", ylab = "y", main = "Population Growth Model")
+lines(pts, preds, lty = 1, col = "red", lwd = 3)
 
 # ci
 quantile(b_coef[, 1], probs = c(0.025, 0.975))
@@ -227,3 +253,5 @@ quantile(b_coef[, 2], probs = c(0.025, 0.975))
 quantile(b_coef[, 3], probs = c(0.025, 0.975))
 
 ```
+
+Again, none of our confidence intervals contain 0. So they are significantly different from 0.

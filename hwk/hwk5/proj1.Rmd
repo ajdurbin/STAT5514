@@ -635,7 +635,7 @@ We see that they are an improvement over Models 1, 2, and 4, but not as good as 
 
 We had various success fitting nonlinear models to the above data. Aside from choosing appropriate starting values for the assumed underlying models, it was extremely difficult bootstrapping the data to get appropriate estimates. We used a clever `try` statement inside our code and increased the bootstrap iterations to combat this process. 
 
-Our most successful models were the population growth Model 1, spline Model 4, and robust population growth Model 3. Based on deviance, AIC, BIC measures we choose Model 3 as the best fitting model. It combats the outlier observation and still provides an appropraite fit for the majority of the data.
+Our most successful models were the population growth Model 1, spline Model 4, and robust population growth Model 3. Based on deviance, AIC, BIC measures we choose Model 3 as the best fitting model. It combats the outlier observation and still provides an appropraite fit for the majority of the data. It also provides reasonable intpretations of the coefficients.
 
 
 # Problem 2

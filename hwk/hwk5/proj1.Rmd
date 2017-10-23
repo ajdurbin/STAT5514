@@ -8,7 +8,7 @@ abstract: "This paper concerns itself with nonlinear regression. We look at two 
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache = FALSE)
 ```
 
 ```{r, include=FALSE}
@@ -177,13 +177,38 @@ lines(pts, preds, lty = 1, col = "red", lwd = 3)
 ```{r}
 
 summary(best)
+
+```
+
+We see that the `a` parameter is statistically significant when we fit the nonlinear regression on the entire dataset with this assumed model. Furthermore, the fitted nonlinear regression line appears to fit well to the data.
+
+Our bootstrap parameter estimates are as follows.
+
+```{r}
+
 paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
 paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
 paste0("Bootstrapped Mean Coefficient, beta_2: ", mean(b_coef[, 3]))
 
+```
+
+We see that the bootstrap parameter estimates are comparable to those of the model fit with the entire dataset.
+
+The bootstrap confidence intervals are the following.
+
+```{r}
+
 paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
 paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
 paste0("beta_2 bootstrap ci: ", quantile(b_coef[, 3], probs = c(0.025, 0.975)))
+
+```
+
+We see that none of the bootstrap confidence intervals contain zero, so that the bootstrap coefficients are significantly different from zero. Note that the `a` parameter is statistically significant in the model fit with the entire dataset.
+
+The following code gives measures of model fit.
+
+```{r}
 
 paste0("Deviance: ", deviance(best))
 paste0("AIC: ", AIC(best))
@@ -197,7 +222,9 @@ paste0("BIC: ", BIC(best))
 y = \frac{\beta_0(x^2+x\beta_1)}{x^2+x\beta_2+\beta_3} + \epsilon
 \]
 
-```{r, fig.cap="Nonlinear regression model fit for the population growth model."}
+This model was chosen based on nonlinear example datasets from the *Information Technology Laboratory* website. It appear does also appear to follow a similar logistic regression path. We fit this model and give measurements of fit as well as confidence intervals.
+
+```{r, fig.cap="Nonlinear regression model fit for the modified population growth model."}
 
 # storage
 b_coef <- matrix(data = NA, ncol = 4, nrow = 2000)
@@ -252,7 +279,7 @@ my_func1 <- function(boot_co, dat){
 # plots
 pts <- seq(min(obs$x), max(obs$x), by = 0.01)
 preds <- my_func1(boot_co = b_coef, dat = pts)
-plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Population Growth Model Fit")
+plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Modified Population Growth Model Fit")
 # abline(best)
 lines(pts, preds, lty = 1, col = "red", lwd = 3)
 
@@ -261,15 +288,259 @@ lines(pts, preds, lty = 1, col = "red", lwd = 3)
 ```{r}
 
 summary(best)
+
+```
+
+We see that only the `b` parameter is statistically significant when this model is fit to the entire dataset. Furthermore, the model fit is extremely poor. There appears to be some vertical asymptote.
+
+Our bootstrap parameter estimates are as follows.
+
+```{r}
+
 paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
 paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
 paste0("Bootstrapped Mean Coefficient, beta_2: ", mean(b_coef[, 3]))
 paste0("Bootstrapped Mean Coefficient, beta_3: ", mean(b_coef[, 4]))
 
+```
+
+We see that these bootstrap coefficients are very different than those from the model fit on the entire dataset.
+
+The bootstrap confidence intervals are as follows.
+
+```{r}
+
 paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
 paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
 paste0("beta_2 bootstrap ci: ", quantile(b_coef[, 3], probs = c(0.025, 0.975)))
 paste0("beta_3 bootstrap ci: ", quantile(b_coef[, 4], probs = c(0.025, 0.975)))
+
+```
+
+We see that the bootstrap confidence intervals for teh coefficients are extremely high. Additionally, two of the bootstrap confidence intervals contain 0, so we cannot claim that they are statistically significant. Note that the `b` parameter that appears statistically significant in the above output is no longer significant here. However, the `d`. `e` parameters are statistically significant, unlike the above output.
+
+The following code gives measures of model fit.
+
+```{r}
+
+paste0("Deviance: ", deviance(best))
+paste0("AIC: ", AIC(best))
+paste0("BIC: ", BIC(best))
+
+```
+
+We see that compared to Model 1, there is smaller deviance, but increased AIC and BIC.
+
+### Model 3
+
+\[
+y = \frac{\beta_0}{1 + exp(\beta_1 + \beta_2x)} + \epsilon
+\]
+
+We next again consider Model 1 and try to fit the robust linear regression
+
+```{r, fig.cap="Robust nonlinear regression model fit for the population growth model.", warning=FALSE}
+
+# storage
+b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+ss_res <- rep(0, 2000)
+
+for(i in 1:2000){
+
+  boot <- sample(1:7, 7, replace = TRUE)
+  boot_sample <- obs[boot, ]
+
+  try({
+
+    # logistic growth model
+    nlfit <- nlrob(formula = y ~ a / (1 + exp(b + k * x)),
+                  start = list(a = 100, b = 2.5, k = -0.1),
+                  data = boot_sample,
+                  control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+                  algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
+  }, silent = TRUE)
+
+}
+
+b_coef <- unique(na.omit(b_coef))
+ss_res <- unique(na.omit(ss_res))
+
+best <- nlrob(formula = y ~ a / (1 + exp(b + k * x)),
+             start = list(a = 100, b = 2.5, k = -0.1),
+             data = obs,
+             control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+             algorithm = "default")
+
+# function for predictions
+my_func1 <- function(boot_co, dat){
+  
+  a <- mean(boot_co[, 1])
+  b <- mean(boot_co[, 2])
+  c <- mean(boot_co[, 3])
+  pckg <- a / (1 + exp(b + c*dat))
+  return(pckg)
+  
+}
+
+# plots
+pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+preds <- my_func1(boot_co = b_coef, dat = pts)
+plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Population Growth Model Fit")
+lines(pts, preds, lty = 1, col = "red", lwd = 3)
+
+```
+
+```{r}
+
+summary(best)
+
+```
+
+We see that the all three parameters are statistically significant when we fit the robust nonlinear regression on the entire dataset with this assumed model. Furthermore, the fitted robust nonlinear regression line appears to fit well to the data.
+
+Our bootstrap parameter estimates are as follows.
+
+```{r}
+
+paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
+paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
+paste0("Bootstrapped Mean Coefficient, beta_2: ", mean(b_coef[, 3]))
+
+```
+
+We see that the bootstrap parameter estimates are comparable to those of the model fit with the entire dataset. Note that compared to Model 1, the parameters estiamtes are different. 
+
+The bootstrap confidence intervals are the following.
+
+```{r}
+
+paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
+paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
+paste0("beta_2 bootstrap ci: ", quantile(b_coef[, 3], probs = c(0.025, 0.975)))
+
+```
+
+We see that none of the bootstrap confidence intervals contain zero, so that the bootstrap coefficients are significantly different from zero. Note that each bootstrap confidence intervals contain the parameter estimates from Model 1, so that the robust versus non-robust fits are not significantly different. 
+
+The following code gives measures of model fit.
+
+```{r}
+
+paste0("Deviance: ", deviance(best))
+paste0("AIC: ", AIC(best))
+paste0("BIC: ", BIC(best))
+
+```
+
+Compared to Models 1 and 2, we have significantly smaller deviance, and smaller AIC and BIC.
+
+### Model 4
+
+\[
+y = \beta_0 + x^{\beta_1} + \epsilon
+\]
+
+We wanted to think of a more simple model that captures the slow curvature of the data. Thus we consider an intercept plus some fractional power of the data. We expected it to increase logarithmically and may be an appropriate choice for this data.
+
+```{r, fig.cap="Nonlinear regression model fit for the fractional power model."}
+
+# storage
+b_coef <- matrix(data = NA, ncol = 2, nrow = 2000)
+ss_res <- rep(0, 2000)
+
+for(i in 1:2000){
+
+  boot <- sample(1:7, 7, replace = TRUE)
+  boot_sample <- obs[boot, ]
+
+  try({
+
+    # logistic growth model
+    nlfit <- nls2(formula = y ~ a + x^b,
+                  start = list(a = 20, b = 0.5),
+                  data = boot_sample,
+                  control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+                  algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
+  }, silent = TRUE)
+
+}
+
+b_coef <- unique(na.omit(b_coef))
+ss_res <- unique(na.omit(ss_res))
+
+best <- nls2(formula = y ~ a + x^b,
+             start = list(a = 100, b = 0.5),
+             data = obs,
+             control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+             algorithm = "default")
+
+# function for predictions
+my_func1 <- function(boot_co, dat){
+  
+  a <- mean(boot_co[, 1])
+  b <- mean(boot_co[, 2])
+  pckg <- a + dat^b
+  return(pckg)
+  
+}
+
+# plots
+pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+preds <- my_func1(boot_co = b_coef, dat = pts)
+plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Population Growth Model Fit")
+lines(pts, preds, lty = 1, col = "red", lwd = 3)
+
+```
+
+```{r}
+
+summary(best)
+
+```
+
+We see that the `a` parameter is statistically significant when we fit the nonlinear regression on the entire dataset with this assumed model. Furthermore, the fitted nonlinear regression line appears to fit well to the data.
+
+Our bootstrap parameter estimates are as follows.
+
+```{r}
+
+paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
+paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
+
+```
+
+We see that the bootstrap parameter estimates are comparable to those of the model fit with the entire dataset.
+
+The bootstrap confidence intervals are the following.
+
+```{r}
+
+paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
+paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
+
+```
+
+We see that none of the bootstrap confidence intervals contain zero, so that the bootstrap coefficients are significantly different from zero. Note that the `a` parameter is statistically significant in the model fit with the entire dataset.
+
+The following code gives measures of model fit.
+
+```{r}
 
 paste0("Deviance: ", deviance(best))
 paste0("AIC: ", AIC(best))

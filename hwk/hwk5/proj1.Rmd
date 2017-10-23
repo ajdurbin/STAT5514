@@ -238,23 +238,23 @@ best <- nls2(formula = y ~ a*(x^2+b*x)/(x^2+x*d+e),
              algorithm = "default")
 
 # function for predictions
-# my_func1 <- function(boot_co, dat){
-#   
-#   a <- mean(boot_co[, 1])
-#   b <- mean(boot_co[, 2])
-#   d <- mean(boot_co[, 3])
-#   e <- mean(boot_co[, 4])
-#   pckg <- a*(dat^2 + dat*b) / (dat^2 + dat*d+e)
-#   return(pckg)
-#   
-# }
+my_func1 <- function(boot_co, dat){
+
+  a <- mean(boot_co[, 1])
+  b <- mean(boot_co[, 2])
+  d <- mean(boot_co[, 3])
+  e <- mean(boot_co[, 4])
+  pckg <- a*(dat^2 + dat*b) / (dat^2 + dat*d+e)
+  return(pckg)
+
+}
 
 # plots
-# pts <- seq(min(obs$x), max(obs$x), by = 0.01)
-# preds <- my_func1(boot_co = b_coef, dat = pts)
+pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+preds <- my_func1(boot_co = b_coef, dat = pts)
 plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Population Growth Model Fit")
-abline(best)
-# lines(pts, preds, lty = 1, col = "red", lwd = 3)
+# abline(best)
+lines(pts, preds, lty = 1, col = "red", lwd = 3)
 
 ```
 

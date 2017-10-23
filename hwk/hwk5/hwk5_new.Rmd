@@ -1,0 +1,309 @@
+---
+title: "Project 1"
+subtitle: "Regression Analysis"
+author: "Alexander Durbin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+options(stringsAsFactors = FALSE)
+library(minpack.lm)
+library(nls2)
+library(mgcv)
+library(robustbase)
+```
+
+
+# Efficiency
+
+```{r, warning=FALSE}
+ 
+# load data
+raw <- read.csv("EffRange.csv")
+raw <- raw[, 2:ncol(raw)]
+obs <- raw[, 1:2]
+colnames(obs) <- c('y', 'x')
+
+# storage
+b_coef1 <- matrix(data = NA, ncol = 3, nrow = 2000)
+ss_res1 <- rep(0, 2000)
+b_coef2 <- matrix(data = NA, ncol = 2, nrow = 2000)
+ss_res2 <- rep(0, 2000)
+# b_coef3 <- matrix(data = NA, ncol = 3, nrow = 2000)
+# ss_res3 <- rep(0, 2000)
+
+# bootstrap -----------------------------------------------------------------------
+for(i in 1:2000){
+
+  boot <- sample(1:7, 7, replace = TRUE)
+  boot_sample <- obs[boot, ]
+
+  try({
+
+    # logistic growth model
+    nlfit1 <- nls2(formula = y ~ a / (1 + exp(b + k * x)),
+                  start = list(a = 100, b = 2.5, k = -0.1),
+                  data = boot_sample,
+                  control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+                  algorithm = "default")
+    
+    b_coef1[i, ] <- coefficients(nlfit1)
+    ss_res1[i] <- sum(residuals(nlfit1)^2)
+    
+    # square root
+    nlfit2 <- nls2(formula = y ~ a + x^b ,
+             start = list(a = 20, b = 0.5),
+             data = boot_sample,
+             control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+             algorithm = "default")
+    
+    b_coef2[i, ] <- coefficients(nlfit2)
+    ss_res2[i] <- sum(residuals(nlfit2)^2)
+    
+  }, silent = TRUE)
+
+}
+
+# bootstrap summaries --------------------------------------------------------------
+# grab unique
+b_coef1 <- unique(na.omit(b_coef1))
+ss_res1 <- unique(ss_res1)
+b_coef2 <- unique(na.omit(b_coef2))
+ss_res2 <- unique(ss_res2)
+
+summary(ss_res)
+
+
+# logistic growth model ----------------------------------------------------
+# compare best estimate from all 7 data points to mean of bootstrapped sample
+best <- nls2(formula = y ~ a / (1 + exp(b + k * x)),
+             start = list(a = 100, b = 2.5, k = -0.1),
+             data = obs,
+             control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+             algorithm = "default")
+
+deviance(best1)
+coefficients(best1)
+summary(best1)
+c(mean(b_coef1[, 1]), mean(b_coef1[, 2]), mean(b_coef1[, 3]))
+
+# function for predictions
+my_func1 <- function(boot_co, dat){
+  
+  a <- mean(boot_co[, 1])
+  b <- mean(boot_co[, 2])
+  c <- mean(boot_co[, 3])
+  pckg <- a / (1 + exp(b + c*dat))
+  return(pckg)
+  
+}
+
+# plots
+pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+preds <- my_func1(boot_co = b_coef1, dat = pts)
+plot(obs$x, obs$y, xlab = "x", ylab = "y", main = "Population Growth Model")
+lines(pts, preds, lty = 1, col = "red", lwd = 3)
+
+# ci
+quantile(b_coef1[, 1], probs = c(0.025, 0.975))
+quantile(b_coef1[, 2], probs = c(0.025, 0.975))
+quantile(b_coef1[, 3], probs = c(0.025, 0.975))
+
+
+# square root one ---------------------------------------------------------------
+
+best2 <- nlfit2 <- nls2(formula = y ~ a + x^b,
+             start = list(a = 20, b = 0.5),
+             data = obs,
+             control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+             algorithm = "default")
+
+deviance(best2)
+coefficients(best2)
+summary(best2)
+c(mean(b_coef2[, 1]), mean(b_coef2[, 2]))
+
+# function for predictions
+my_func2 <- function(boot_co, dat){
+  
+  a <- mean(boot_co[, 1])
+  b <- mean(boot_co[, 2])
+  pckg <- a + dat ^ b
+  return(pckg)
+  
+}
+
+# plots
+pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+preds <- my_func2(boot_co = b_coef2, dat = pts)
+plot(obs$x, obs$y, xlab = "x", ylab = "y", main = "Population Growth Model")
+lines(pts, preds, lty = 1, col = "red", lwd = 3)
+
+# ci
+quantile(b_coef2[, 1], probs = c(0.025, 0.975))
+quantile(b_coef2[, 2], probs = c(0.025, 0.975))
+
+# last model ------------------------------------------------------------------
+
+```
+
+# Herbicide
+
+```{r}
+
+# load data
+raw <- read.csv("Herbicide.csv")
+colnames(raw) <- NULL
+raw <- raw[2:nrow(raw), ]
+raw <- raw[, 2:ncol(raw)]
+
+```
+
+## Observation 1
+
+```{r}
+
+# # choose obs
+# obs <- raw[, 1:2]
+# x <- as.numeric(obs[, 1])
+# y <- as.numeric(obs[, 2])
+# 
+# # storage
+# b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+# ss_res <- rep(0, 2000)
+# 
+# # call
+# for(i in 1:2000){
+#   
+#   boot <- sample(1:7, 7, replace = TRUE)
+#   x_star <- x[boot]
+#   y_star <- y[boot]
+#   
+#   try({
+#     
+#     nlfit <- nls2(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
+#                   start = c(p1 = 100, p2 = 1, p3 = -1),
+#                   control = nls.control(maxiter = 1e3,
+#                                         minFactor = .Machine$double.eps,
+#                                         tol = 1e-5),
+#                   algorithm = "default")
+#     
+#     b_coef[i, ] <- coefficients(nlfit)
+#     ss_res[i] <- sum(residuals(nlfit)^2)
+#     
+#   }, silent = TRUE)
+#  
+# }
+# 
+# # grab unique
+# b_coef <- unique(na.omit(b_coef))
+# ss_res <- unique(ss_res)
+# 
+# summary(ss_res)
+# 
+# # compare best estimate from all 7 data points to mean of bootstrapped sample
+# best <- nls2(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+#              start = c(p1 = 100, p2 = 1, p3 = -1),
+#              control = nls.control(maxiter = 1e3,
+#                                    minFactor = .Machine$double.eps,
+#                                    tol = 1e-5),
+#              algorithm = "default")
+# 
+# deviance(best)
+# coefficients(best)
+# summary(best)
+# c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
+# 
+# # plot
+# plot(x, y, main = "Nonlinear fit")
+# pts <- seq(min(x), max(x), by = 0.01)
+# preds <- predict(best, pts)
+# lines(x, preds, lty = 1, col = "red", lwd = 3)
+# 
+# # ci
+# quantile(b_coef[, 1], probs = c(0.025, 0.975))
+# quantile(b_coef[, 2], probs = c(0.025, 0.975))
+# quantile(b_coef[, 3], probs = c(0.025, 0.975))
+
+```
+
+## Observation 2
+
+```{r}
+
+# # load data
+# obs <- raw[, 3:4]
+# x <- as.numeric(obs[, 1])
+# y <- as.numeric(obs[, 2])
+# 
+# # storage
+# b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+# ss_res <- rep(0, 2000)
+# 
+# # call
+# for(i in 1:2000){
+#   
+#   boot <- sample(1:7, 7, replace = TRUE)
+#   x_star <- x[boot]
+#   y_star <- y[boot]
+#   
+#   try({
+#     
+#     nlfit <- nls2(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
+#                 start = c(p1 = 100, p2 = 1, p3 = -1),
+#                 control = nls.control(maxiter = 1e3,
+#                                      minFactor = .Machine$double.eps,
+#                                      tol = 1e-5),
+#                 algorithm = "default")
+#     
+#     b_coef[i, ] <- coefficients(nlfit)
+#     ss_res[i] <- sum(residuals(nlfit)^2)
+#     
+#   }, silent = TRUE)
+# 
+# }
+# 
+# # grab unique
+# b_coef <- unique(na.omit(b_coef))
+# ss_res <- unique(ss_res)
+# 
+# summary(ss_res)
+# 
+# # compare best estimate from all 7 data points to mean of bootstrapped sample
+# best <- nls2(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+#               start = c(p1 = 100, p2 = 1, p3 = -1),
+#               control = nls.control(maxiter = 1e3,
+#                                     minFactor = .Machine$double.eps,
+#                                     tol = 1e-5),
+#               algorithm = "default")
+# 
+# deviance(best)
+# coefficients(best)
+# summary(best)
+# c(mean(b_coef[, 1]), mean(b_coef[, 2]), mean(b_coef[, 3]))
+# 
+# # plot
+# plot(x, y, main = "Nonlinear fit")
+# pts <- seq(min(x), max(x), by = 0.01)
+# preds <- predict(best, pts)
+# lines(x, preds, lty = 1, col = "red", lwd = 3)
+# 
+# # ci
+# quantile(b_coef[, 1], probs = c(0.025, 0.975))
+# quantile(b_coef[, 2], probs = c(0.025, 0.975))
+# quantile(b_coef[, 3], probs = c(0.025, 0.975))
+
+```

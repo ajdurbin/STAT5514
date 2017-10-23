@@ -31,6 +31,10 @@ colnames(raw) <- NULL
 raw <- raw[2:nrow(raw), ]
 raw <- raw[, 2:ncol(raw)]
 
+```
+
+```{r}
+
 # choose obs
 obs <- raw[, 1:2]
 x <- as.numeric(obs[, 1])

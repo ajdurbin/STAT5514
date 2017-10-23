@@ -8,7 +8,7 @@ abstract: "This paper concerns itself with nonlinear regression. We look at two 
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, cache = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 ```
 
 ```{r, include=FALSE}
@@ -20,6 +20,7 @@ library(robustbase)
 library(faraway)
 library(lawstat)
 library(lmtest)
+library(splines)
 ```
 
 # Problem 1
@@ -90,7 +91,7 @@ qqline(residuals(lmfit))
 
 ```
 
-In the simple linear regression setting, it appears that we do havee a single outlier. Furthermore, all of our simple linear regression diagnostics hold. So how well does a simple linear regression line fit? 
+In the simple linear regression setting, it appears that we do have a single outlier. Furthermore, all of our simple linear regression diagnostics hold. So how well does a simple linear regression line fit? 
 
 ```{r, fig.cap="Fitted regression line predicting Efficiency from Range. We see that the regression line does not follow the curvature."}
 
@@ -514,7 +515,7 @@ summary(best)
 
 ```
 
-We see that the `a` parameter is statistically significant when we fit the nonlinear regression on the entire dataset with this assumed model. Furthermore, the fitted nonlinear regression line appears to fit well to the data.
+We see that this model does not quite capture the nonlinear relationship in the dat. We do see that for the entire dataset, the `b` parameter is significantly different from 0.
 
 Our bootstrap parameter estimates are as follows.
 
@@ -536,7 +537,7 @@ paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
 
 ```
 
-We see that none of the bootstrap confidence intervals contain zero, so that the bootstrap coefficients are significantly different from zero. Note that the `a` parameter is statistically significant in the model fit with the entire dataset.
+We see that the bootstrap confidence interval for the `a` parameter contains zero and reflects the summary above. The bootstrap confidence interval for `b` does not contain zero so it is significantly different from zero.
 
 The following code gives measures of model fit.
 
@@ -547,3 +548,372 @@ paste0("AIC: ", AIC(best))
 paste0("BIC: ", BIC(best))
 
 ```
+
+Not surprisingly, this model has an extremely high deviance measure and is a much worse fit compared to the previous models. However, the AIC and BIC measures are comparable still.
+
+### Model 4
+
+We next fit a spline model with cross-validation on the number of kinks. This better fit the entire dataset instead of the robust nonlinear population growth model.
+
+```{r, fig.cap="Spline fit for Efficiency Versus Range"}
+
+# storage
+b_coef <- matrix(data = NA, ncol = 4, nrow = 2000)
+
+for(i in 1:2000){
+
+  boot <- sample(1:7, 7, replace = TRUE)
+  boot_sample <- obs[boot, ]
+
+  try({
+
+    nlfit <- lm(y~bs(x), data = boot_sample)
+    b_coef[i, ] <- coefficients(nlfit)
+    
+  }, silent = TRUE)
+
+}
+
+b_coef <- unique(na.omit(b_coef))
+
+best <- lm(y~bs(x), data = obs)
+
+# plots
+plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Spline Fit")
+points(obs$x, best$fitted.values, col = 'red')
+
+```
+
+```{r}
+
+summary(best)
+
+```
+
+We see that only one of the coefficients is statistically significant. The fitted values also it the data well except for the two x values stacked on top of each other. Here the spline fit simply takes the average efficiency between the two points.
+
+Our bootstrap parameter estimates are as follows.
+
+```{r}
+
+paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
+paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
+paste0("Bootstrapped Mean Coefficient, beta_2: ", mean(b_coef[, 3]))
+paste0("Bootstrapped Mean Coefficient, beta_3: ", mean(b_coef[, 4]))
+
+```
+
+We see that they are all significantly different from those estimated in the full model. This must have to do with the outlier point and the sampling procedure.
+
+The bootstrap confidence intervals are the following.
+
+```{r}
+
+paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
+paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
+paste0("beta_2 bootstrap ci: ", quantile(b_coef[, 3], probs = c(0.025, 0.975)))
+paste0("beta_3 bootstrap ci: ", quantile(b_coef[, 4], probs = c(0.025, 0.975)))
+
+```
+
+We see that the bootstrap confidence intervals match the significance results from fitting the full model. Only the $\beta_3$ coefficent is statistically significantly different from zero.
+
+The following code gives measures of model fit.
+
+```{r}
+
+paste0("Deviance: ", deviance(best))
+paste0("AIC: ", AIC(best))
+paste0("BIC: ", BIC(best))
+
+```
+
+We see that they are an improvement over Models 1, 2, and 4, but not as good as Model 3.
+
+
+## Model Discussion
+
+We had various success fitting nonlinear models to the above data. Aside from choosing appropriate starting values for the assumed underlying models, it was extremely difficult bootstrapping the data to get appropriate estimates. We used a clever `try` statement inside our code and increased the bootstrap iterations to combat this process. 
+
+Our most successful models were the population growth Model 1, spline Model 4, and robust population growth Model 3. Based on deviance, AIC, BIC measures we choose Model 3 as the best fitting model. It combats the outlier observation and still provides an appropraite fit for the majority of the data.
+
+
+# Problem 2
+
+Our data consists of two two herbacides appled at seven different rates with the dry weight percentages of velvetleaf plants are recorded. 
+
+```{r}
+
+# load data
+raw <- read.csv("Herbicide.csv")
+colnames(raw) <- NULL
+raw <- raw[2:nrow(raw), ]
+raw <- raw[, 2:ncol(raw)]
+obs <- raw[, 1:2]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
+
+# simple linear regression fit
+lmfit <- lm(y ~ x, data = obs)
+cook <- cooks.distance(lmfit)
+
+```
+
+```{r, fig.cap="Scatter plot of Herbicide 1 data. There appears to be an exponential decay relationship between x and y."}
+
+plot(x, y, xlab = "x", ylab = "y", main = "Scatter plot of Herbicide Observation 1")
+
+```
+
+```{r, fig.cap="Histogram of residuals from linear fit. The residuals do not appear normally distributed."}
+
+hist(residuals(lmfit), main = "Residuals From Linear Fit", xlab = "Residuals")
+
+```
+
+```{r}
+
+runs.test(residuals(lmfit))
+
+```
+
+Result of Runs Test. We fail to reject the null, so the residuals are iid.
+
+```{r}
+
+shapiro.test(residuals(lmfit))
+
+```
+
+Result of Shapiro-Wilk test for normality. Surprisingly, the residuals are normally distributed.
+
+```{r}
+
+bptest(lmfit)
+
+```
+
+Additionally, the data satisfy constant variance.
+
+```{r, fig.cap="Various Linear Model Diagnostic Plots."}
+
+par(mfrow=c(2,2))
+halfnorm(cook, 3, ylab = "Cooks Distance", main = "Residual Cooks Distance")
+plot(fitted(lmfit), residuals(lmfit), xlab = "Fitted", ylab = "Residuals", main = "Residuals Versus Fitted")
+abline(h=0)
+plot(fitted(lmfit), abs(residuals(lmfit)), xlab = "Fitted", ylab = "|Residuals|", main = "|Residuals| Versus Fitted")
+abline(h=0)
+qqnorm(residuals(lmfit))
+qqline(residuals(lmfit))
+
+```
+
+In the simple linear regression setting, it appears that we do have a single outlier. Furthermore, all of our simple linear regression diagnostics hold. So how well does a simple linear regression line fit? 
+
+```{r, fig.cap="Fitted regression line for Herbicide 1. We see that the regression line does not follow the curvature."}
+
+summary(lmfit)
+paste0("Deviance: ", deviance(lmfit))
+paste0("AIC: ", AIC(lmfit))
+paste0("BIC: ", BIC(lmfit))
+plot(x, y, xlab = "x", ylab = "y", main = "Scatter plot of Herbicide 1")
+abline(lmfit)
+
+```
+
+From the linear model summary output, we see that both coefficients are significant, as is the F-statistic. The Adjusted R-squared surprisingly good. We also get a deviance measure of the model fit with the AIC and BIC criterion. 
+
+The above results show that a linear model may appear to be an appropriate choice for this data. However, we think a nonlinear model may fit the data better.
+
+Our assumed model is 
+
+\[
+y_{i,j} = \alpha_j \frac{\beta_j x_{i,j}^{\gamma_j}}{1+\beta_j x_{i,j}^{\gamma_j}} + \epsilon.
+\]
+
+## Herbacide 1
+
+```{r}
+
+# choose obs
+obs <- raw[, 1:2]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
+
+# storage
+b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+
+# call
+for(i in 1:2000){
+  
+  boot <- sample(1:7, 7, replace = TRUE)
+  x_star <- x[boot]
+  y_star <- y[boot]
+  
+  try({
+    
+    nlfit <- nls2(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
+                start = c(p1 = 100, p2 = 1, p3 = -1),
+                control = nls.control(maxiter = 1e3,
+                                     minFactor = .Machine$double.eps,
+                                     tol = 1e-5),
+                algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
+  }, silent = TRUE)
+  
+}
+
+# grab unique
+b_coef <- unique(na.omit(b_coef))
+
+# compare best estimate from all 7 data points to mean of bootstrapped sample
+best <- nls2(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+              start = c(p1 = 100, p2 = 1, p3 = -1),
+              control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+              algorithm = "default")
+
+summary(best)
+
+# plot
+plot(x, y, main = "Nonlinear fit for Herbicide Observation 1")
+pts <- seq(min(x), max(x), by = 0.01)
+preds <- predict(best, pts)
+lines(x, preds, lty = 1, col = "red", lwd = 3)
+
+```
+
+We see that all three parameters are significantly different from zero. The fitted regression curve also appropriately fits the data.
+
+The mean bootstrap coefficients are as follows.
+
+```{r}
+
+paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
+paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
+paste0("Bootstrapped Mean Coefficient, beta_2: ", mean(b_coef[, 3]))
+
+```
+
+We see that the mean bootstrap coefficients are comparable to the model fit on the entire dataset.
+
+The bootsrap confidence intervals are as follows.
+
+```{r}
+
+paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
+paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
+paste0("beta_2 bootstrap ci: ", quantile(b_coef[, 3], probs = c(0.025, 0.975)))
+
+```
+
+We see that none of the intervals contain zero, reflecting the significant in the full model above. Additionally, each interval contains the estimated coefficients from the full model.
+
+We have the following deviance measures.
+
+```{r}
+
+paste0("Deviance: ", deviance(best))
+paste0("AIC: ", AIC(best))
+paste0("BIC: ", BIC(best))
+
+```
+
+## Herbicide 2
+
+```{r}
+
+# choose obs
+obs <- raw[, 3:4]
+x <- as.numeric(obs[, 1])
+y <- as.numeric(obs[, 2])
+
+# storage
+b_coef <- matrix(data = NA, ncol = 3, nrow = 2000)
+
+# call
+for(i in 1:2000){
+  
+  boot <- sample(1:7, 7, replace = TRUE)
+  x_star <- x[boot]
+  y_star <- y[boot]
+  
+  try({
+    
+    nlfit <- nls2(y_star ~ (p1 * p2 * x_star^p3) / (1 + p2 * x_star^p3), 
+                start = c(p1 = 100, p2 = 1, p3 = -1),
+                control = nls.control(maxiter = 1e3,
+                                     minFactor = .Machine$double.eps,
+                                     tol = 1e-5),
+                algorithm = "default")
+    
+    b_coef[i, ] <- coefficients(nlfit)
+    ss_res[i] <- sum(residuals(nlfit)^2)
+    
+  }, silent = TRUE)
+  
+}
+
+# grab unique
+b_coef <- unique(na.omit(b_coef))
+
+# compare best estimate from all 7 data points to mean of bootstrapped sample
+best <- nls2(y ~ (p1 * p2 * x^p3) / (1 + p2 * x^p3), 
+              start = c(p1 = 100, p2 = 1, p3 = -1),
+              control = nls.control(maxiter = 1e3,
+                                    minFactor = .Machine$double.eps,
+                                    tol = 1e-5),
+              algorithm = "default")
+
+summary(best)
+
+# plot
+plot(x, y, main = "Nonlinear fit for Herbicide Observation 1")
+pts <- seq(min(x), max(x), by = 0.01)
+preds <- predict(best, pts)
+lines(x, preds, lty = 1, col = "red", lwd = 3)
+
+```
+
+Similar to the first observation, the fitted regression line follows the curvature in the second observation well.
+
+The mean bootstrap coefficients are as follows.
+
+```{r}
+
+paste0("Bootstrapped Mean Coefficient, beta_0: ", mean(b_coef[, 1]))
+paste0("Bootstrapped Mean Coefficient, beta_1: ", mean(b_coef[, 2]))
+paste0("Bootstrapped Mean Coefficient, beta_2: ", mean(b_coef[, 3]))
+
+```
+
+Again, they are comparable to those estimated in the full model fit.
+
+The bootstrap confidence intervals are as follows.
+
+```{r}
+
+paste0("beta_0 bootstrap ci: ", quantile(b_coef[, 1], probs = c(0.025, 0.975)))
+paste0("beta_1 bootstrap ci: ", quantile(b_coef[, 2], probs = c(0.025, 0.975)))
+paste0("beta_2 bootstrap ci: ", quantile(b_coef[, 3], probs = c(0.025, 0.975)))
+
+```
+
+Similar to the first observation, they do not contain zero and contain the estimated parameters from the full model. Thus the bootstrap estimated coefficients are significantly different from zero.
+
+The following are the measures of model fit.
+
+```{r}
+
+paste0("Deviance: ", deviance(best))
+paste0("AIC: ", AIC(best))
+paste0("BIC: ", BIC(best))
+
+```
+
+We see that this model for the second observation performs slightly worse than the first observation.
+

@@ -223,7 +223,7 @@ paste0("BIC: ", BIC(best))
 y = \frac{\beta_0(x^2+x\beta_1)}{x^2+x\beta_2+\beta_3} + \epsilon
 \]
 
-This model was chosen based on nonlinear example datasets from the *Information Technology Laboratory* website. It appear does also appear to follow a similar logistic regression path. We fit this model and give measurements of fit as well as confidence intervals.
+This model was chosen based on nonlinear example datasets from the *Information Technology Laboratory* website. It also appears to follow a similar logistic regression path. We fit this model and give measurements of fit as well as confidence intervals.
 
 ```{r, fig.cap="Nonlinear regression model fit for the modified population growth model."}
 
@@ -240,7 +240,7 @@ for(i in 1:2000){
 
     # logistic growth model
     nlfit <- nls2(formula = y ~ a*(x^2+b*x)/(x^2+x*d+e),
-             start = list(a = 32.6, b = -40, d = -63, e = 1650),
+             start = list(a = 40, b = -15, d = -2, e = 100),
              data = boot_sample,
              control = nls.control(maxiter = 1e3,
                                     minFactor = .Machine$double.eps,
@@ -258,7 +258,7 @@ b_coef <- unique(na.omit(b_coef))
 ss_res <- unique(na.omit(ss_res))
 
 best <- nls2(formula = y ~ a*(x^2+b*x)/(x^2+x*d+e),
-             start = list(a = 32.6, b = -40, d = -63, e = 1650),
+             start = list(a = 40, b = -15, d = -2, e = 100),
              data = obs,
              control = nls.control(maxiter = 1e3,
                                     minFactor = .Machine$double.eps,
@@ -266,23 +266,26 @@ best <- nls2(formula = y ~ a*(x^2+b*x)/(x^2+x*d+e),
              algorithm = "default")
 
 # function for predictions
-my_func1 <- function(boot_co, dat){
-
-  a <- mean(boot_co[, 1])
-  b <- mean(boot_co[, 2])
-  d <- mean(boot_co[, 3])
-  e <- mean(boot_co[, 4])
-  pckg <- a*(dat^2 + dat*b) / (dat^2 + dat*d+e)
-  return(pckg)
-
-}
+# my_func1 <- function(boot_co, dat){
+# 
+#   a <- mean(boot_co[, 1])
+#   b <- mean(boot_co[, 2])
+#   d <- mean(boot_co[, 3])
+#   e <- mean(boot_co[, 4])
+#   pckg <- a*(dat^2 + dat*b) / (dat^2 + dat*d+e)
+#   return(pckg)
+# 
+# }
 
 # plots
-pts <- seq(min(obs$x), max(obs$x), by = 0.01)
-preds <- my_func1(boot_co = b_coef, dat = pts)
-plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Modified Population Growth Model Fit")
-# abline(best)
-lines(pts, preds, lty = 1, col = "red", lwd = 3)
+# pts <- seq(min(obs$x), max(obs$x), by = 0.01)
+# preds <- my_func1(boot_co = b_coef, dat = pts)
+# plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Modified Population Growth Model Fit")
+# # abline(best)
+# lines(pts, preds, lty = 1, col = "red", lwd = 3)
+
+plot(obs$x, obs$y, xlab = 'Range', ylab = 'Efficiency', main = 'Modified Population Growth Model')
+points(obs$x, fitted(best), col = 'red', pch = 15)
 
 ```
 
@@ -292,7 +295,7 @@ summary(best)
 
 ```
 
-We see that only the `b` parameter is statistically significant when this model is fit to the entire dataset. Furthermore, the model fit is extremely poor. There appears to be some vertical asymptote.
+We see that only the `b` parameter is statistically significant when this model is fit to the entire dataset. Furthermore, the predictions appear appropriate.
 
 Our bootstrap parameter estimates are as follows.
 
@@ -551,7 +554,7 @@ paste0("BIC: ", BIC(best))
 
 Not surprisingly, this model has an extremely high deviance measure and is a much worse fit compared to the previous models. However, the AIC and BIC measures are comparable still.
 
-### Model 4
+### Model 5
 
 We next fit a spline model with cross-validation on the number of kinks. This better fit the entire dataset instead of the robust nonlinear population growth model.
 
@@ -580,7 +583,7 @@ best <- lm(y~bs(x), data = obs)
 
 # plots
 plot(obs$x, obs$y, xlab = "Range", ylab = "Efficiency", main = "Spline Fit")
-points(obs$x, best$fitted.values, col = 'red')
+points(obs$x, best$fitted.values, col = 'red', pch = 15)
 
 ```
 

@@ -1,0 +1,76 @@
+---
+title: "Homework 6"
+subtitle: "Regression Analysis"
+author: "Alexander Durbin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lme4)
+library(nlme)
+```
+
+We use extract the variance estimates using `lmer` and use them in estimating the coefficients and random effects. Thus, it is not necessary to iterate.
+
+# Random Intercept, Fixed Slope
+
+```{r}
+
+lme_fit = lmer(distance ~ age + (1 | Subject), data = Orthodont)
+X = cbind(rep(1, 27), Orthodont$age)
+Z <- bdiag(rep(1, 4))
+for(i in 1:26){
+  Z <- bdiag(rep(1, 4), Z)
+}
+V = 4.4521 * Z %*% t(Z) + (1.4521) ^ 2 * diag(108)
+beta = solve(t(X) %*% solve(V) %*% X) %*% t(X) %*% solve(V) %*% Orthodont$distance
+u = 4.472 * t(Z) %*% solve(V) %*% (Orthodont$distance - X %*% beta)
+
+coef(lme_fit)
+beta
+ranef(lme_fit)
+u
+
+```
+
+# Random Slope, Fixed Intercept
+
+```{r}
+
+lme_fit <- lmer(distance ~ age + (0 + age | Subject) , data = Orthodont)
+X <- cbind(rep(1, 27), Orthodont$age)
+Z <- bdiag(Orthodont$age[1:4])
+for(i in 1:26){
+  Z <- bdiag(rep(1, 4), Z)
+}
+V <- (0.1895 ^ 2) * Z %*% t(Z) + (1.4126 ^ 2) * diag(108)
+beta <- solve(t(X) %*% solve(V) %*% X) %*% t(X) %*% solve(V) %*% Orthodont$distance
+u <- (0.1895 ^ 2) * t(Z) %*% solve(V) %*% (Orthodont$distance - X %*% beta)
+
+coef(lme_fit)
+beta
+ranef(lme_fit)
+u
+
+```
+
+# Random Slope and Intercept
+
+```{r}
+lme_fit <- lmer(distance ~ age + (1 + age | Subject), data = Orthodont)
+X <- cbind(rep(1, 27), Orthodont$age)
+Z <- bdiag(cbind(rep(1, 4), Orthodont$age[1:4]))
+for(i in 1:26){
+  Z <- bdiag(cbind(rep(1, 4), Orthodont$age[1:4]), Z)
+}
+V <- (0.2264 ^ 2 + 2.327 ^ 2 - 2 * 0.61) *Z %*% t(Z) + (1.31 ^ 2) * diag(108)
+beta <- solve(t(X) %*% solve(V) %*% X) %*% t(X) %*% solve(V) %*% Orthodont$distance
+u <- (0.2264 ^ 2 + 2.797 ^ 2 - 2 * 0.77) * t(Z) %*% solve(V) %*% (Orthodont$distance - X %*% beta)
+coef(lme_fit)
+beta
+ranef(lme_fit)
+u
+
+```

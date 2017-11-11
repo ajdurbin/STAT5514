@@ -9,12 +9,18 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(ggplot2)
+library(gridExtra)
 set.seed(12345)
 ```
 
-# Linear Spline - Fix Knots, Vary Lambda
+# Linear Spline
+
+- For *k* knots, $\lambda=0$ fits a straight line between each knot, so that the fitted spline better follows the curvature of the data. As $\lambda$ increases, the fitted spline becomes more segmented and does not follow the curvature of the data. Large $\lambda$ fits an almost straight line to the data.
+- For fixed $\lambda$, increasing the number of knots the spline to fit more, smaller line segments that better fit the curvature of the data. 
 
 ```{r}
+
+storage <- list("0" = NULL)
 
 for(num_knots in c(5, 10, 20, 30)){
   for(l in c(0, 10, 15, 20, 50, 1000)){
@@ -55,76 +61,31 @@ for(num_knots in c(5, 10, 20, 30)){
       geom_vline(xintercept = knots, alpha = 0.3) +
       stat_function(mapping = aes(color = "Truth"), 
                     fun = function(x) {sin(x + 0.1)}, lwd = 1) +
-      geom_line(mapping = aes(x = x, y = y_hat, color = "Fitted")) +
+      geom_line(mapping = aes(x = x, y = y_hat, color = "Spline")) +
       scale_color_manual(name = "Fitted", values = c("red", "blue")) +
       ggtitle(paste0("Linear spline with ", K,
                      " knots \nand smoothing parameter ", lambda))
     
-    print(p)
+    storage[[as.character(num_knots)]][[as.character(l)]] <- p
     
   }
 }
 
-```
-
-# Linear Spline - Fix Lambda, Vary Knots
-
-```{r}
-
-for(l in c(0, 10, 15, 20, 50, 1000)){
-  for(num_knots in c(5, 10, 20, 30)){
-    
-    # generate data
-    x <- runif(n = 1000, min = 0, max = 3*pi/2)
-    e <- rnorm(n = 1000, mean = 0, sd = 0.1)
-    y <- sin(x + 0.1) + e
-    df <- data.frame(x, e, y)
-    
-    # get knot locations
-    K <- num_knots
-    k <- 1:K
-    knots <- quantile(x, probs = (k+1)/(K+2))
-    
-    # make linear spline matrix
-    X <- cbind(1, x)
-    for(i in k){
-      X <- cbind(X, (x - knots[i]) * as.numeric(x > knots[i]))
-    }
-    
-    # make D
-    D <- diag(c(0, 0, rep(1, K)))
-    
-    # set smoothing parameter
-    lambda <- l
-    
-    # get beta hat
-    beta_hat <- solve(t(X) %*% X + lambda * D, t(X) %*% y)
-    
-    # get estimates
-    y_hat <- X %*% beta_hat
-    df$y_hat <- y_hat
-    
-    # plot
-    p <- ggplot(data = df) +
-      geom_point(mapping = aes(x = x, y = y), alpha = 0.3, show.legend = FALSE) +
-      geom_vline(xintercept = knots, alpha = 0.3) +
-      stat_function(mapping = aes(color = "Truth"), 
-                    fun = function(x) {sin(x + 0.1)}, lwd = 1) +
-      geom_line(mapping = aes(x = x, y = y_hat, color = "Fitted")) +
-      scale_color_manual(name = "Fitted", values = c("red", "blue")) +
-      ggtitle(paste0("Linear spline with ", K,
-                     " knots \nand smoothing parameter ", lambda))
-    
-    print(p)
-    
-  }
+# arrange plots
+for(i in c(5, 10, 20, 30)){
+  do.call("grid.arrange", c(storage[[as.character(i)]], ncol = 2))
 }
 
 ```
 
-# Quadratic Spline - Fix Knots, Vary Lambda
+# Quadratic Spline
+
+- Quadratic spline better fits the data here. For *k* knots, $\lambda=0$ provides a very wiggly fit, with each line segment being either a concave or convex fit. This results in a line that follows the noise of the data a little too well. Increasing $\lambda=10,20,50$ provides a more smooth fit that is less affected by the noise. But for $\lambda=1000$, we are provided with a single quadratic fit that does not reflect the overall curvature.
+- High *k* and small $\lambda$ gives splines that follow the data too closely and are very wiggly. For moderate $\lambda$, the fit is almost identical and very smooth. High $\lambda$ and high *k* again provide a single quadratic fit.
 
 ```{r}
+
+storage <- list("0" = NULL)
 
 for(num_knots in c(5, 10, 20, 30)){
   for(l in c(0, 10, 15, 20, 50, 1000)){
@@ -165,69 +126,19 @@ for(num_knots in c(5, 10, 20, 30)){
       geom_vline(xintercept = knots, alpha = 0.3) +
       stat_function(mapping = aes(color = "Truth"), 
                     fun = function(x) {sin(x + 0.1)}, lwd = 1) +
-      geom_line(mapping = aes(x = x, y = y_hat, color = "Fitted")) +
+      geom_line(mapping = aes(x = x, y = y_hat, color = "Spline")) +
       scale_color_manual(name = "Fitted", values = c("red", "blue")) +
       ggtitle(paste0("Quadratic spline with ", K,
                      " knots \nand smoothing parameter ", lambda))
     
-    print(p)
+    storage[[as.character(num_knots)]][[as.character(l)]] <- p
     
   }
 }
 
-```
-
-# Quadratic Spline - Fix Lambda, Vary Knots
-
-```{r}
-
-for(l in c(0, 10, 15, 20, 50, 1000)){
-  for(num_knots in c(5, 10, 20, 30)){
-    
-    # generate data
-    x <- runif(n = 1000, min = 0, max = 3*pi/2)
-    e <- rnorm(n = 1000, mean = 0, sd = 0.1)
-    y <- sin(x + 0.1) + e
-    df <- data.frame(x, e, y)
-    
-    # get knot locations
-    K <- num_knots
-    k <- 1:K
-    knots <- quantile(x, probs = (k+1)/(K+2))
-    
-    # make linear spline matrix
-    X <- cbind(1, x)
-    for(i in k){
-      X <- cbind(X, (x - knots[i])^2 * as.numeric(x > knots[i]))
-    }
-    
-    # make D
-    D <- diag(c(0, 0, rep(1, K)))
-    
-    # set smoothing parameter
-    lambda <- l
-    
-    # get beta hat
-    beta_hat <- solve(t(X) %*% X + lambda * D, t(X) %*% y)
-    
-    # get estimates
-    y_hat <- X %*% beta_hat
-    df$y_hat <- y_hat
-    
-    # plot
-    p <- ggplot(data = df) +
-      geom_point(mapping = aes(x = x, y = y), alpha = 0.3, show.legend = FALSE) +
-      geom_vline(xintercept = knots, alpha = 0.3) +
-      stat_function(mapping = aes(color = "Truth"), 
-                    fun = function(x) {sin(x + 0.1)}, lwd = 1) +
-      geom_line(mapping = aes(x = x, y = y_hat, color = "Fitted")) +
-      scale_color_manual(name = "Fitted", values = c("red", "blue")) +
-      ggtitle(paste0("Quadratic spline with ", K,
-                     " knots \nand smoothing parameter ", lambda))
-    
-    print(p)
-    
-  }
+# arrange plots
+for(i in c(5, 10, 20, 30)){
+  do.call("grid.arrange", c(storage[[as.character(i)]], ncol = 2))
 }
 
 ```
